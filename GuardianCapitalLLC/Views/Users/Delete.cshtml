@@ -1,0 +1,55 @@
+﻿@model ApplicationUser
+
+<div class="mt-2">
+	<div class="card bg-gray-200 bd-0">
+		<div class="card-body">
+			<div class="card bg-danger text-white">
+				<div class="card-body">
+					<strong>Are you sure you want to delete this client?</strong>
+					This action cannot be undone.
+				</div>
+			</div>
+			<div class="main-contact-info-body p-4">
+				<div>
+					<h5 class="tx-dark tx-medium mg-b-10">@Model.FullName</h5>
+				</div>
+				<div class="media-list pb-0">
+					<div class="media">
+						<div class="media-body">
+							<div>
+								<label>Work Phone:</label> <span class="tx-medium">@Model.WorkPhone</span>
+							</div>
+							<div>
+								<label>Personal Phone:</label> <span class="tx-medium">@Model.PersonalPhone</span>
+							</div>
+						</div>
+					</div>
+					<div class="media">
+						<div class="media-body">
+							<div>
+								<label>Work Email:</label> <span class="tx-medium">@Model.WorkEmail</span>
+							</div>
+							<div>
+								<label>Personal Email: </label> <span class="tx-medium">@Model.PersonalEmail</span>
+							</div>
+						</div>
+					</div>
+					<div class="media">
+						<div class="media-body">
+							<div>
+								<label>Current Address:</label> <span class="tx-medium">@Model.Address</span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<form asp-action="DeleteConfirmed" class="form-group mb-0 mt-3 justify-content-end">
+					<div>
+						<input type="hidden" asp-for="Id" />
+						<button type="submit" class="btn btn-danger px-5">Delete Client</button>
+						<button asp-controller="Users" asp-action="Index" class="btn btn-success ms-4 px-5">Cancel</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>

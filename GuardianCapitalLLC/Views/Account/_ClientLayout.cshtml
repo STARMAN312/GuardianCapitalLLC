@@ -1,0 +1,179 @@
+﻿<!DOCTYPE html>
+<html lang="en" style="--primary01: rgba(139, 115, 85, 0.1); --primary02: rgba(139, 115, 85, 0.2); --primary03: rgba(139, 115, 85, 0.3); --primary06: rgba(139, 115, 85, 0.6); --primary09: rgba(139, 115, 85, 0.9); --primary05: rgba(139, 115, 85, 0.5); --primary-bg-color: #8b7355; --primary-bg-hover: #8b735595; --primary-bg-border: #8b7355; --dark-null: #8b7355; --transparent-null: #8b735595; --primary-transparentcolor: #8b735520; --darkprimary-null: #8b735520; --transparentprimary-null: #8b735520;">
+<head>
+	<meta charset="UTF-8">
+	<meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=0'>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="Description" content="Bootstrap Responsive Admin Web Dashboard HTML5 Template">
+	<meta name="Author" content="Spruko Technologies Private Limited">
+	<meta name="Keywords" content="admin,admin dashboard,admin dashboard template,admin panel template,admin template,admin theme,bootstrap 4 admin template,bootstrap 4 dashboard,bootstrap admin,bootstrap admin dashboard,bootstrap admin panel,bootstrap admin template,bootstrap admin theme,bootstrap dashboard,bootstrap form template,bootstrap panel,bootstrap ui kit,dashboard bootstrap 4,dashboard design,dashboard html,dashboard template,dashboard ui kit,envato templates,flat ui,html,html and css templates,html dashboard template,html5,jquery html,premium,premium quality,sidebar bootstrap 4,template admin bootstrap 4" />
+
+	<!-- Title -->
+	<title> Guardian Capital - Account </title>
+
+	<!-- Favicon -->
+	<link rel="icon" href="~/img/brand/favicon.png" type="image/x-icon" />
+
+	<!-- Icons css -->
+	<link href="~/css/icons.css" rel="stylesheet">
+
+	<!--  bootstrap css-->
+	<link id="style" href="~/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+
+	<!--- Style css --->
+	<link href="~/css/style.css" rel="stylesheet">
+	<link href="~/css/style-dark.css" rel="stylesheet">
+	<link href="~/css/style-transparent.css" rel="stylesheet">
+
+	<!---Skinmodes css-->
+	<link href="~/css/skin-modes.css" rel="stylesheet" />
+
+	<!--- Animations css-->
+	<link href="~/css/animate.css" rel="stylesheet">
+
+	<!-- INTERNAL Switcher css -->
+	<link href="~/switcher/css/switcher.css" rel="stylesheet" />
+	<link href="~/switcher/demo.css" rel="stylesheet" />
+
+	<link href="~/css/account.css?v=2" rel="stylesheet" />
+</head>
+<body class="main-body app ltr sidebar-gone horizontal">
+
+	<!-- Loader -->
+	<div id="global-loader">
+		<img src="~/img/loader.svg" class="loader-img" alt="Loader">
+	</div>
+	<!-- /Loader -->
+	<!-- Page -->
+	<div class="page">
+		<div>
+			<!-- main-content -->
+			<div class="main-content app-content">
+				<!-- container -->
+				<div class="main-container container-fluid">
+					<!-- breadcrumb -->
+					<div class="breadcrumb-header justify-content-between">
+						<div class="left-content">
+							<img src="~/img/brand/logo.png">
+						</div>
+						@if (User.IsInRole("Client"))
+						{
+							<div class="justify-content-center mt-2">
+								<a asp-controller="Account" asp-action="Logout" class="btn btn-danger">Log Out</a>
+							</div>
+						}
+					</div>
+					<!-- /breadcrumb -->
+					@if (ViewBag.HideBanner != true)
+					{
+						<div class="banner">
+							<div class="geometric-shapes">
+								<div class="shape"></div>
+								<div class="shape"></div>
+								<div class="shape"></div>
+							</div>
+
+							<div class="content">
+								<h1 class="main-heading">Timely Information</h1>
+								<h2 class="sub-heading">About Your Investments</h2>
+							</div>
+						</div>
+					}
+					<nav aria-label="breadcrumb">
+						<ol class="breadcrumb breadcrumb-style mg-b-0">
+							<li class="breadcrumb-item">
+								<a>Guardian Capital</a>
+							</li>
+							@if (User.IsInRole("Client"))
+							{
+								<li class="breadcrumb-item">
+									<a asp-controller="Account" asp-action="Index">Account</a>
+								</li>
+							}
+							else
+							{
+								<li class="breadcrumb-item">
+									<a>Account</a>
+								</li>
+								<li class="breadcrumb-item active">Log In</li>
+							}
+
+						</ol>
+					</nav>
+					@RenderBody()
+				</div>
+			</div>
+			<!-- Footer opened -->
+			<div class="main-footer text-white">
+				<div class="container-fluid pt-0 ht-100p">
+					<div class="breadcrumb-header justify-content-between">
+						<div class="left-content">
+							©<script>document.write(new Date().getFullYear());</script> Guardian Capital LLC.
+						</div>
+						<div class="justify-content-center mt-2">
+							
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- Footer closed -->
+		</div>
+	</div>
+	<!-- End Page -->
+	<!-- Back-to-top -->
+	<a href="#top" id="back-to-top"><i class="las la-arrow-up"></i></a>
+
+	<!-- JQuery min js -->
+	<script src="~/plugins/jquery/jquery.min.js"></script>
+
+	<!-- Bootstrap js -->
+	<script src="~/plugins/bootstrap/js/popper.min.js"></script>
+	<script src="~/plugins/bootstrap/js/bootstrap.min.js"></script>
+
+	<!-- Moment js -->
+	<script src="~/plugins/moment/moment.js"></script>
+
+	<!-- P-scroll js -->
+	<script src="~/plugins/perfect-scrollbar/perfect-scrollbar.min.js"></script>
+	<script src="~/plugins/perfect-scrollbar/p-scroll.js"></script>
+
+	<!-- eva-icons js -->
+	<script src="~/js/eva-icons.min.js"></script>
+
+	<!-- Sidebar js -->
+	<script src="~/plugins/side-menu/sidemenu.js"></script>
+
+	<!-- Sticky js -->
+	<script src="~/js/sticky.js"></script>
+
+	<!-- Right-sidebar js -->
+	<script src="~/plugins/sidebar/sidebar.js"></script>
+	<script src="~/plugins/sidebar/sidebar-custom.js"></script>
+
+	<!-- Theme Color js -->
+	<script src="~/js/themecolor.js"></script>
+
+	<!-- custom js -->
+	<script src="~/js/custom1.js"></script>
+
+	<!-- Switcher js -->
+	<script src="~/switcher/js/switcher.js"></script>
+
+	<!-- Internal Data tables -->
+	<script src="~/plugins/datatable/js/jquery.dataTables.min.js"></script>
+	<script src="~/plugins/datatable/js/dataTables.bootstrap5.js"></script>
+	<script src="~/plugins/datatable/js/dataTables.buttons.min.js"></script>
+	<script src="~/plugins/datatable/js/buttons.bootstrap5.min.js"></script>
+	<script src="~/plugins/datatable/js/jszip.min.js"></script>
+	<script src="~/plugins/datatable/pdfmake/pdfmake.min.js"></script>
+	<script src="~/plugins/datatable/pdfmake/vfs_fonts.js"></script>
+	<script src="~/plugins/datatable/js/buttons.html5.min.js"></script>
+	<script src="~/plugins/datatable/js/buttons.print.min.js"></script>
+	<script src="~/plugins/datatable/js/buttons.colVis.min.js"></script>
+	<script src="~/plugins/datatable/dataTables.responsive.min.js"></script>
+	<script src="~/plugins/datatable/responsive.bootstrap5.min.js"></script>
+	<script src="~/lib/qrcode.js"></script>
+	<script src="~/js/table-data.js"></script>
+
+</body>
+</html>

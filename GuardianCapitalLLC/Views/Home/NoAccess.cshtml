@@ -1,0 +1,105 @@
+﻿@{
+	Layout = "";
+}
+
+<!DOCTYPE html>
+<html lang="en" style="--primary01: rgba(139, 115, 85, 0.1); --primary02: rgba(139, 115, 85, 0.2); --primary03: rgba(139, 115, 85, 0.3); --primary06: rgba(139, 115, 85, 0.6); --primary09: rgba(139, 115, 85, 0.9); --primary05: rgba(139, 115, 85, 0.5); --primary-bg-color: #8b7355; --primary-bg-hover: #8b735595; --primary-bg-border: #8b7355; --dark-null: #8b7355; --transparent-null: #8b735595; --primary-transparentcolor: #8b735520; --darkprimary-null: #8b735520; --transparentprimary-null: #8b735520;">
+<head>
+
+	<meta charset="UTF-8">
+	<meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=0'>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+	<!-- Title -->
+	<title>No access</title>
+
+	<!-- Favicon -->
+	<link rel="icon" href="~/img/brand/favicon.png" type="image/x-icon" />
+
+	<!-- Icons css -->
+	<link href="~/css/icons.css" rel="stylesheet">
+
+	<!--  bootstrap css-->
+	<link id="style" href="~/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+
+	<!--- Style css --->
+	<link href="~/css/style.css" rel="stylesheet">
+	<link href="~/css/style-dark.css" rel="stylesheet">
+	<link href="~/css/style-transparent.css" rel="stylesheet">
+
+	<!---Skinmodes css-->
+	<link href="~/css/skin-modes.css" rel="stylesheet" />
+
+	<!--- Animations css-->
+	<link href="~/css/animate.css" rel="stylesheet">
+
+</head>
+<body class="ltr error-page1 bg-primary">
+
+	<!-- Loader -->
+	<div id="global-loader">
+		<img src="~/img/loader.svg" class="loader-img" alt="Loader">
+	</div>
+	<!-- /Loader -->
+
+	<div class="square-box">
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+	</div>
+	<div class="page">
+		<!-- Main-error-wrapper -->
+		<div class="main-error-wrapper page page-h">
+			<h1 class="text-white">500<span class="tx-20">error</span></h1>
+			<h2 class="text-white">The page you were looking for doesn't exist.</h2>
+			<h6 class="tx-white-6">You may have mistyped the address or the page may have moved.</h6>
+			@if (User.IsInRole("Client"))
+			{
+				<a asp-controller="Account" asp-action="Index" class="btn btn-light" >Back to Home</a>
+
+			}
+			else if (User.IsInRole("Admin"))
+			{
+				<a asp-controller="Home" asp-action="Index" class="btn btn-light">Back to Home</a>
+			}
+			else
+			{
+				<a asp-controller="Account" asp-action="Login" class="btn btn-light">Back to Home</a>
+			}
+		</div>
+		<!-- /Main-error-wrapper -->
+	</div>
+
+	<!-- JQuery min js -->
+	<script src="~/plugins/jquery/jquery.min.js"></script>
+
+	<!-- Bootstrap js -->
+	<script src="~/plugins/bootstrap/js/popper.min.js"></script>
+	<script src="~/plugins/bootstrap/js/bootstrap.min.js"></script>
+
+	<!--Internal  Perfect-scrollbar js -->
+	<script src="~/plugins/perfect-scrollbar/perfect-scrollbar.min.js"></script>
+
+	<!-- eva-icons js -->
+	<script src="~/js/eva-icons.min.js"></script>
+
+	<!-- Theme Color js -->
+	<script src="~/js/themecolor.js"></script>
+
+	<!-- custom js -->
+	<script src="~/js/custom.js"></script>
+
+</body>
+</html>

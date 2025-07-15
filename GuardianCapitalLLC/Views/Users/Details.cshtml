@@ -1,0 +1,124 @@
+﻿@model UserViewVM
+@using System.Text.RegularExpressions
+
+<div class="mt-2">
+	<div class="card bg-gray-200 bd-0">
+		<div class="card-body">
+			@if (TempData["Username"] != null && TempData["PIN"] != null)
+			{
+				<div class="card bg-info text-white">
+					<div class="card-body">
+						<div>
+							Username: <strong id="generated-username">@TempData["Username"]</strong>
+							<br />
+							PIN: <strong id="generated-pin">@TempData["PIN"]</strong>
+						</div>
+						<div class="mt-2 mb-2">
+							<span>Make sure to copy this information and give it to the client.</span>
+						</div>
+						<button type="button" class="btn btn-warning btn-sm mt-2" onclick="copyToClipboard()">Copy information</button>
+					</div>
+				</div>
+			}
+			<div class="main-contact-info-body p-4">
+				<div>
+					<h5 class="tx-dark tx-medium mg-b-10">@Model.FullName</h5>
+				</div>
+				<div class="media-list pb-0">
+					<div class="media">
+						<div class="media-body">
+							<div>
+								<label>Work Phone:</label> <span class="tx-medium">@Model.WorkPhone</span>
+							</div>
+							<div>
+								<label>Personal Phone:</label> <span class="tx-medium">@Model.PersonalPhone</span>
+							</div>
+						</div>
+					</div>
+					<div class="media">
+						<div class="media-body">
+							<div>
+								<label>Work Email:</label> <span class="tx-medium">@Model.WorkEmail</span>
+							</div>
+							<div>
+								<label>Personal Email: </label> <span class="tx-medium">@Model.PersonalEmail</span>
+							</div>
+						</div>
+					</div>
+					<div class="media">
+						<div class="media-body">
+							<div>
+								<label>Current Address:</label> <span class="tx-medium">@Model.Address</span>
+							</div>
+						</div>
+					</div>
+					<div class="media">
+						<div class="media-body">
+							@foreach (BankAccount bankAccount in Model.BankAccounts)
+							{
+								<div>
+									<label>@Regex.Replace(bankAccount.Type.ToString(), "(\\B[A-Z])", " $1") Account:</label><span class="tx-medium"><strong>$@bankAccount.Balance</strong></span>
+								</div>
+							}
+						</div>
+					</div>
+				</div>
+				<div class="mt-5">
+					<a asp-controller="BankAccount" asp-action="Index" asp-route-id="@Model.Id" class="btn btn-info">Manage Bank Accounts</a>
+					<form asp-controller="Users" asp-action="GenerateNewPassword" asp-route-id="@Model.Id" method="post" class="d-inline">
+						@Html.AntiForgeryToken()
+						<button type="submit" class="btn btn-warning">Generate New PIN</button>
+					</form>
+				</div>
+				<div>
+					<h5 class="tx-dark tx-medium mg-b-10 mt-5">Transactions</h5>
+				</div>
+				<div class="table-responsive  export-table mt-2">
+					<table id="file-datatable" class="table table-bordered text-nowrap key-buttons border-bottom">
+						<thead>
+							<tr>
+								<th class="border-bottom-0">Date</th>
+								<th class="border-bottom-0">Account</th>
+								<th class="border-bottom-0">Transaction</th>
+								<th class="border-bottom-0">Amount</th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (TransactionVM transaction in Model.Transactions)
+							{
+								<tr>
+									<td>@transaction.Date.ToLocalTime().ToString("MM-dd-yyyy HH:mm tt")</td>
+									<td>@Regex.Replace(transaction.AccountName, "(\\B[A-Z])", " $1")</td>
+									<td>@Regex.Replace(transaction.Type.ToString(), "(\\B[A-Z])", " $1")</td>
+									@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal")
+									{
+										<td>-$@transaction.Amount</td>
+									}
+									else
+									{
+										<td>+$@transaction.Amount</td>
+									}
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	function copyToClipboard() {
+		const username = document.getElementById('generated-username').innerText;
+		const pin = document.getElementById('generated-pin').innerText;
+		const text = `Username: ${username}\nPIN: ${pin}`;
+
+		navigator.clipboard.writeText(text)
+			.then(() => {
+				alert('Copied to clipboard!');
+			})
+			.catch(err => {
+				console.error('Error copying to clipboard: ', err);
+			});
+	}
+</script>

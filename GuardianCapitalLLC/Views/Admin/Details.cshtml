@@ -1,0 +1,63 @@
+﻿@model AdminViewVM
+@using System.Text.RegularExpressions
+
+<div class="mt-2">
+	<div class="card bg-gray-200 bd-0">
+		<div class="card-body">
+			@if (TempData["Username"] != null && TempData["Password"] != null)
+			{
+				<div class="card bg-info text-white">
+					<div class="card-body">
+						<div>
+							Username: <strong id="generated-username">@TempData["Username"]</strong>
+							<br />
+							Password: <strong id="generated-pin">@TempData["Password"]</strong>
+						</div>
+						<div class="mt-2 mb-2">
+							<span>Make sure to copy this information and give it to the admin.</span>
+						</div>
+						<button type="button" class="btn btn-warning btn-sm mt-2" onclick="copyToClipboard()">Copy information</button>
+					</div>
+				</div>
+			}
+			<div class="main-contact-info-body p-4">
+				<div>
+					<h5 class="tx-dark tx-medium mg-b-10">@Model.FullName</h5>
+				</div>
+				<div class="media-list pb-0">
+					<div class="media">
+						<div class="media-body">
+							<div>
+								<label>Phone Number:</label> <span class="tx-medium">@Model.PhoneNumber</span>
+							</div>
+							<div>
+								<label>Email:</label> <span class="tx-medium">@Model.Email</span>
+							</div>
+						</div>
+					</div>
+					<div class="mt-5">
+						<form asp-controller="Admin" asp-action="GenerateNewPassword" asp-route-id="@Model.Id" method="post" class="d-inline">
+							@Html.AntiForgeryToken()
+							<button type="submit" class="btn btn-warning">Generate New Password</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	function copyToClipboard() {
+		const username = document.getElementById('generated-username').innerText;
+		const pin = document.getElementById('generated-pin').innerText;
+		const text = `Username: ${username}\nPIN: ${pin}`;
+
+		navigator.clipboard.writeText(text)
+			.then(() => {
+				alert('Copied to clipboard!');
+			})
+			.catch(err => {
+				console.error('Error copying to clipboard: ', err);
+			});
+	}
+</script>

@@ -1,0 +1,251 @@
+﻿@{
+	var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=0'>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="Description" content="Bootstrap Responsive Admin Web Dashboard HTML5 Template">
+	<meta name="Author" content="Spruko Technologies Private Limited">
+	<meta name="Keywords" content="admin,admin dashboard,admin dashboard template,admin panel template,admin template,admin theme,bootstrap 4 admin template,bootstrap 4 dashboard,bootstrap admin,bootstrap admin dashboard,bootstrap admin panel,bootstrap admin template,bootstrap admin theme,bootstrap dashboard,bootstrap form template,bootstrap panel,bootstrap ui kit,dashboard bootstrap 4,dashboard design,dashboard html,dashboard template,dashboard ui kit,envato templates,flat ui,html,html and css templates,html dashboard template,html5,jquery html,premium,premium quality,sidebar bootstrap 4,template admin bootstrap 4" />
+
+	<!-- Title -->
+	<title> @ViewData["Title"] </title>
+
+	<!-- Favicon -->
+	<link rel="icon" href="~/img/brand/favicon.png" type="image/x-icon" />
+
+	<!-- Icons css -->
+	<link href="~/css/icons.css" rel="stylesheet">
+
+	<!--  bootstrap css-->
+	<link id="style" href="~/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+
+	<!--- Style css --->
+	<link href="~/css/style.css" rel="stylesheet">
+	<link href="~/css/style-dark.css" rel="stylesheet">
+	<link href="~/css/style-transparent.css" rel="stylesheet">
+	<link href="~/css/error.css" rel="stylesheet">
+
+	<!---Skinmodes css-->
+	<link href="~/css/skin-modes.css" rel="stylesheet" />
+
+	<!--- Animations css-->
+	<link href="~/css/animate.css" rel="stylesheet">
+
+</head>
+
+<body class="ltr main-body app sidebar-mini">
+
+	<!-- Loader -->
+	<div id="global-loader">
+		<img src="~/img/loader.svg" class="loader-img" alt="Loader">
+	</div>
+	<!-- /Loader -->
+	<!-- Page -->
+	<div class="page">
+
+		<div>
+			<!-- main-header -->
+			<div class="main-header side-header sticky nav nav-item">
+				<div class=" main-container container-fluid">
+					<div class="main-header-left ">
+						<div class="responsive-logo">
+							<a href="index.html" class="header-logo">
+								<img src="~/img/brand/logo.png" class="mobile-logo logo-1" alt="logo">
+								<img src="~/img/brand/logo-white.png" class="mobile-logo dark-logo-1" alt="logo">
+							</a>
+						</div>
+						<div class="app-sidebar__toggle" data-bs-toggle="sidebar">
+							<a class="open-toggle" href="javascript:void(0);"><i class="header-icon fe fe-align-left"></i></a>
+							<a class="close-toggle" href="javascript:void(0);"><i class="header-icon fe fe-x"></i></a>
+						</div>
+						<div class="logo-horizontal">
+							<a href="index.html" class="header-logo">
+								<img src="~/img/brand/logo.png" class="mobile-logo logo-1" alt="logo">
+								<img src="~/img/brand/logo-white.png" class="mobile-logo dark-logo-1" alt="logo">
+							</a>
+						</div>
+					</div>
+					<div class="main-header-right">
+						<button class="navbar-toggler navresponsive-toggler d-lg-none ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent-4" aria-controls="navbarSupportedContent-4" aria-expanded="false" aria-label="Toggle navigation">
+							<span class="navbar-toggler-icon fe fe-more-vertical "></span>
+						</button>
+						<div class="mb-0 navbar navbar-expand-lg navbar-nav-right responsive-navbar navbar-dark p-0">
+							<div class="collapse navbar-collapse" id="navbarSupportedContent-4">
+								<ul class="nav nav-item header-icons navbar-nav-right ms-auto">
+									<li class="nav-item full-screen fullscreen-button">
+										<a class="new nav-link full-screen-link" href="javascript:void(0);"><svg xmlns="http://www.w3.org/2000/svg" class="header-icon-svgs" width="24" height="24" viewBox="0 0 24 24"><path d="M5 5h5V3H3v7h2zm5 14H5v-5H3v7h7zm11-5h-2v5h-5v2h7zm-2-4h2V3h-7v2h5z" /></svg></a>
+									</li>
+									<li class="nav-item">
+										<a asp-controller="Account" asp-action="Logout" class="btn btn-danger">Log Out</a>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- /main-header -->
+			<!-- main-sidebar -->
+			<div class="sticky">
+				<aside class="app-sidebar">
+					<div class="main-sidebar-header active">
+						<a class="header-logo active" href="index.html">
+							<img src="~/img/brand/logo.png" class="main-logo  desktop-logo" alt="logo">
+							<img src="~/img/brand/favicon.png" class="main-logo  mobile-logo" alt="logo">
+						</a>
+					</div>
+					<div class="main-sidemenu">
+						<div class="slide-left disabled" id="slide-left"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24"><path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z" /></svg></div>
+						<ul class="side-menu">
+							<li class="slide">
+								<a class="side-menu__item @(controller == "Home" ? "active" : "")" data-bs-toggle="slide" asp-controller="Home" asp-action="Index">
+									<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" width="24" height="24" viewBox="0 0 24 24">
+										<path d="M3 13h1v7c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-7h1a1 1 0 0 0 .707-1.707l-9-9a.999.999 0 0 0-1.414 0l-9 9A1 1 0 0 0 3 13zm7 7v-5h4v5h-4zm2-15.586 6 6V15l.001 5H16v-5c0-1.103-.897-2-2-2h-4c-1.103 0-2 .897-2 2v5H6v-9.586l6-6z" />
+									</svg>
+									<span class="side-menu__label">Home</span>
+								</a>
+							</li>
+							<li class="slide">
+								<a class="side-menu__item @(controller == "Users" || controller == "BankAccount" ? "active" : "")" data-bs-toggle="slide" asp-controller="Users" asp-action="Index">
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="side-menu__icon bi bi-people" viewBox="0 0 16 16">
+										<path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022ZM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0M6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816M4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0m3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4" />
+									</svg>
+									<span class="side-menu__label">Clients</span>
+								</a>
+							</li>
+							<li class="slide">
+								<a class="side-menu__item @(controller == "Admin" ? "active" : "")" data-bs-toggle="slide" asp-controller="Admin" asp-action="Index">
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="side-menu__icon bi bi-people" viewBox="0 0 16 16">
+										<path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022ZM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0M6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816M4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0m3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4" />
+									</svg>
+									<span class="side-menu__label">Admins</span>
+								</a>
+							</li>
+						</ul>
+						<div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24"><path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z" /></svg></div>
+					</div>
+				</aside>
+			</div>
+			<!-- main-sidebar -->
+		</div>
+
+		<!-- main-content -->
+		<div class="main-content app-content">
+
+			<!-- container -->
+			<div class="main-container container-fluid">
+				@if (TempData["NotificationMessage"] != null)
+				{
+					<div class="pos-relative mx-sm-5 mt-2" style="z-index: 2">
+						<div class="demo-static-toast pos-absolute t-0 r-0">
+							<div aria-atomic="true" aria-live="assertive" class="toast fade show" role="alert" data-bs-autohide="true" data-bs-delay="5">
+								<!-- 5000 milliseconds = 5 seconds -->
+								<div class="toast-header">
+									<h6 class="tx-14 mg-b-0 mg-r-auto">Notification</h6>
+									<button aria-label="Close" class="ms-2 mb-1 close tx-normal" data-bs-dismiss="toast" type="button">
+										<span aria-hidden="true">&times;</span>
+									</button>
+								</div>
+								<div class="toast-body">
+									@TempData["NotificationMessage"]
+								</div>
+							</div>
+						</div>
+					</div>
+				}
+				<div style="z-index: 1">
+					@RenderBody()
+				</div>
+			</div>
+			<!-- Container closed -->
+		</div>
+		<!-- Footer opened -->
+		<div class="main-footer">
+			<div class="container-fluid pt-0 ht-100p">
+				Copyright © <script>document.write(new Date().getFullYear());</script>
+				<a class="text-primary">Guardian Capital LLC</a>.
+			</div>
+		</div>
+		<!-- Footer closed -->
+
+	</div>
+	<!-- End Page -->
+	<!-- Back-to-top -->
+	<a href="#top" id="back-to-top"><i class="las la-arrow-up"></i></a>
+
+	<!-- JQuery min js -->
+	<script src="~/plugins/jquery/jquery.min.js"></script>
+
+	<!-- Bootstrap js -->
+	<script src="~/plugins/bootstrap/js/popper.min.js"></script>
+	<script src="~/plugins/bootstrap/js/bootstrap.min.js"></script>
+
+	<!-- Moment js -->
+	<script src="~/plugins/moment/moment.js"></script>
+
+	<!-- P-scroll js -->
+	<script src="~/plugins/perfect-scrollbar/perfect-scrollbar.min.js"></script>
+	<script src="~/plugins/perfect-scrollbar/p-scroll.js"></script>
+
+	<!-- Internal Select2 js-->
+	<script src="~/plugins/select2/js/select2.min.js"></script>
+	<script src="~/js/select2.js"></script>
+
+	<!-- Sidebar js -->
+	<script src="~/plugins/side-menu/sidemenu.js"></script>
+
+	<!-- Sticky js -->
+	<script src="~/js/sticky.js"></script>
+
+	<!-- Right-sidebar js -->
+	<script src="~/plugins/sidebar/sidebar.js"></script>
+	<script src="~/plugins/sidebar/sidebar-custom.js"></script>
+
+	<!--Internal Counters -->
+	<script src="~/plugins/counters/waypoints.min.js"></script>
+	<script src="~/plugins/counters/counterup.min.js"></script>
+
+	<!--Internal Time Counter -->
+	<script src="~/plugins/counters/jquery.missofis-countdown.js"></script>
+	<script src="~/plugins/counters/counter.js"></script>
+
+	<!-- eva-icons js -->
+	<script src="~/js/eva-icons.min.js"></script>
+
+	<!-- Theme Color js -->
+	<script src="~/js/themecolor.js"></script>
+
+	<!-- custom js -->
+	<script src="~/js/custom.js"></script>
+
+	<!-- Internal Data tables -->
+	<script src="~/plugins/datatable/js/jquery.dataTables.min.js"></script>
+	<script src="~/plugins/datatable/js/dataTables.bootstrap5.js"></script>
+	<script src="~/plugins/datatable/js/dataTables.buttons.min.js"></script>
+	<script src="~/plugins/datatable/js/buttons.bootstrap5.min.js"></script>
+	<script src="~/plugins/datatable/js/jszip.min.js"></script>
+	<script src="~/plugins/datatable/pdfmake/pdfmake.min.js"></script>
+	<script src="~/plugins/datatable/pdfmake/vfs_fonts.js"></script>
+	<script src="~/plugins/datatable/js/buttons.html5.min.js"></script>
+	<script src="~/plugins/datatable/js/buttons.print.min.js"></script>
+	<script src="~/plugins/datatable/js/buttons.colVis.min.js"></script>
+	<script src="~/plugins/datatable/dataTables.responsive.min.js"></script>
+	<script src="~/plugins/datatable/responsive.bootstrap5.min.js"></script>
+	<script src="~/js/table-data.js"></script>
+
+	<!--Internal  Contact js -->
+	<script src="~/js/contact.js"></script>
+
+	<!--Internal  Contact js -->
+	<script src="~/js/contact.js"></script>
+
+	<!-- modal js -->
+	<script src="~/js/modal.js"></script>
+
+</body>
+</html>

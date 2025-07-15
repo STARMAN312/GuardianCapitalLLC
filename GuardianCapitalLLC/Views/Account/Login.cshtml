@@ -1,0 +1,72 @@
+﻿@model LoginVM
+@{
+	Layout = "_ClientLayout";
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+	<div class="card bg-warning text-white mt-5">
+		<div class="card-body d-flex align-items-center p-3">
+			<i class="fas fa-exclamation-circle me-2"></i>
+			<div asp-validation-summary="ModelOnly" class="validation-summary-no-bullets flex-grow-1"></div>
+		</div>
+	</div>
+}
+
+<h3 class="text-primary">Private Wealth Clients</h3>
+<div class="row row-sm form-styles">
+	<div class="col-lg-6 col-xl-6 col-md-12 col-sm-12">
+		<h4>My Account Login</h4>
+		<div class="accent-line"></div>
+
+		<div class="mb-3">
+			<a href="javascript:void(0);" class="btn btn-outline-info tab-button active px-5" onclick="setActiveTab('client')">CLIENT</a>
+			<a href="javascript:void(0);" class="btn btn-outline-info tab-button px-5" onclick="setActiveTab('advisor')">ADVISOR</a>
+		</div>
+		<form asp-action="Login">
+			<div>
+				<div class="form-group">
+					<label for="InputID" class="form-label" id="usernameLabel">Client Username</label>
+					<input asp-for="Username" type="text" class="form-control" id="InputID" placeholder="USER ID">
+				</div>
+				<div class="form-group">
+					<label for="InputPassword" class="form-label" id="passwordLabel">Client Password</label>
+					<input asp-for="Password" type="password" class="form-control" id="InputPassword" placeholder="PASSWORD">
+				</div>
+			</div>
+			<div class="row row-xs align-items-center mg-b-20">
+				<div class="col-md-4">
+					<button type="submit" class="btn btn-info px-5" value="Login">LOGIN</button>
+				</div>
+				<div class="col-md-8 mg-t-5 mg-md-t-0">
+					<span class="forgot-password text-info">FORGOT YOUR PASSWORD?</span>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+<script>
+	function setActiveTab(tab) {
+		// Remove active class from all tabs
+		document.querySelectorAll('.tab-button').forEach(button => {
+			button.classList.remove('active');
+		});
+
+		// Add active class to clicked tab
+		event.target.classList.add('active');
+
+		// Update form labels based on selected tab
+		const usernameLabel = document.getElementById('usernameLabel');
+		const passwordLabel = document.getElementById('passwordLabel');
+
+		if (tab === 'client') {
+			usernameLabel.textContent = 'Client Username';
+			passwordLabel.textContent = 'Client Password';
+		} else if (tab === 'advisor') {
+			usernameLabel.textContent = 'Advisor Username';
+			passwordLabel.textContent = 'Advisor Password';
+		}
+	}
+</script>
+

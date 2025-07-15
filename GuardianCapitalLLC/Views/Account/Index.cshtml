@@ -1,0 +1,146 @@
+﻿@model AccountViewVM
+@using System.Text.RegularExpressions
+@{
+	Layout = "_ClientLayout";
+	var hour = DateTime.Now.Hour;
+	string greeting;
+
+	if (hour >= 5 && hour < 12)
+	{
+		greeting = "Good morning";
+	}
+	else if (hour >= 12 && hour < 18)
+	{
+		greeting = "Good afternoon";
+	}
+	else if (hour >= 18 && hour < 22)
+	{
+		greeting = "Good evening";
+	}
+	else
+	{
+		greeting = "Good night";
+	}
+}
+<div class="row account-information">
+	<div class="col-xxl-5 col-xl-12 col-lg-12 col-md-12 col-sm-12">
+		<div class="row">
+			<div class="col-xl-12 col-lg-12 col-md-12 col-xs-12">
+				<div class="card p-2">
+					<div class="card-body">
+						<div class="row">
+							<div class="col-xl-9 col-lg-7 col-md-6 col-sm-12">
+								<div class="text-justified align-items-center">
+									<h3 class="text-dark font-weight-semibold mb-2 mt-0">@greeting, <span class="text-primary">@Model.FullName</span></h3>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-12 col-lg-12 col-md-12 col-xs-12">
+				<div class="card p-2">
+					<div class="card-header pb-1">
+						<h3 class="card-title mb-2">Account Summary</h3>
+					</div>
+					<div class="card-body p-0">
+						<div class="browser-stats">
+							<div class="d-flex align-items-center item  border-bottom my-2">
+								<div class="d-flex">
+									<div class="">
+										<span class="font-weight-semibold tx-20">Total Balance</span>
+									</div>
+								</div>
+								<div class="ms-auto my-auto">
+									<div class="d-flex">
+										<span class="me-4 mt-1 font-weight-semibold text-success tx-20">$@Model.TotalBalance.ToString("N2")</span>
+									</div>
+								</div>
+							</div>
+							@foreach (BankAccount bankAccount in Model.BankAccounts)
+							{
+								<div class="d-flex align-items-center item  border-bottom my-2">
+									<div class="d-flex">
+										<div class="">
+											<h6 class="">@Regex.Replace(bankAccount.Type.ToString(), "(\\B[A-Z])", " $1") Account</h6>
+										</div>
+									</div>
+									<div class="ms-auto my-auto">
+										<div class="d-flex">
+												<span class="me-4 mt-1 font-weight-semibold tx-16">$@bankAccount.Balance.ToString("N2")</span>
+										</div>
+									</div>
+								</div>
+							}
+						</div>
+						<a asp-controller="Account" asp-action="TransferFunds" class="btn btn-primary btn-lg btn-block">
+							Transfer Funds
+						</a>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-12 col-lg-12 col-md-12 col-xs-12">
+				<div class="card p-2">
+					<div class="card-header pb-1">
+						<h3 class="card-title mb-2">Transaction History</h3>
+					</div>
+					<div class="card-body p-0">
+						<div class="table-responsive export-table mt-2">
+							<table id="file-datatable" class="table table-bordered text-nowrap key-buttons border-bottom">
+								<thead>
+									<tr>
+										<th class="border-bottom-0">Date</th>
+										<th class="border-bottom-0">Account</th>
+										<th class="border-bottom-0">Transaction</th>
+										<th class="border-bottom-0">Amount</th>
+									</tr>
+								</thead>
+								<tbody>
+									@foreach (TransactionVM transaction in Model.Transactions)
+									{
+										<tr>
+											<td>@transaction.Date.ToLocalTime().ToString("MM-dd-yyyy HH:mm tt")</td>
+											<td>@Regex.Replace(transaction.AccountName, "(\\B[A-Z])", " $1")</td>
+											<td>@Regex.Replace(transaction.Type.ToString(), "(\\B[A-Z])", " $1")</td>
+											@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal")
+											{
+														<td>-$@transaction.Amount.ToString("N2")</td>
+											}
+											else
+											{
+												<td>+$@transaction.Amount.ToString("N2")</td>
+											}
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	@if (TempData["Modal"]?.ToString() == "Active")
+	{
+		<div class="modal fade active" id="modaldemo5">
+			<div class="modal-dialog modal-dialog-centered" role="document">
+				<div class="modal-content tx-size-sm">
+					<div class="modal-header">
+						<button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"><span aria-hidden="true">&times;</span></button>
+					</div>
+					<div class="modal-body tx-center pd-y-20 pd-x-20">
+						<i class="icon icon ion-ios-close-circle-outline tx-100 tx-danger lh-1 mg-t-20 d-inline-block"></i>
+						<h4 class="tx-danger mg-b-20">Error: Cannot proccess your transfer.</h4>
+						<p class="mg-b-20 mg-x-20">An error occurred, please try again later.</p><button aria-label="Close" class="btn ripple btn-danger pd-x-25" data-bs-dismiss="modal" type="button">Continue</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script>
+			window.addEventListener("DOMContentLoaded", function () {
+				var modal = new bootstrap.Modal(document.getElementById('modaldemo5'));
+				modal.show();
+			});
+		</script>
+	}
+</div>

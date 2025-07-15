@@ -1,0 +1,151 @@
+﻿@model AdminDashboardVM
+@{
+    ViewData["Title"] = "Home Page";
+}
+<div class="col-xl-12 col-lg-12 col-md-12 col-xs-12 mt-2">
+	<div class="card p-2">
+		<div class="card-body">
+			<div class="row">
+				<div class="col-xl-9 col-lg-7 col-md-6 col-sm-12">
+					<div class="text-justified align-items-center">
+						<h3 class="text-dark font-weight-semibold mb-2 mt-0">Welcome Back, <span class="text-primary">@Model.Username</span></h3>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 px-0 mt-2">
+	<div class="card px-3 ps-4">
+		<div class="row index1">
+			<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
+				<div class="row border-end bd-xs-e-0 p-3">
+					<div class="col-3 d-flex align-items-center justify-content-center">
+						<div class="circle-icon bg-primary text-center align-self-center overflow-hidden shadow">
+							<i class="bi bi-people tx-15 text-white"></i>
+						</div>
+					</div>
+					<div class="col-9 py-0">
+						<div class="pt-4 pb-3">
+							<div class="d-flex">
+								<h6 class="mb-2 tx-12">Total Clients</h6>
+							</div>
+							<div class="pb-0 mt-0">
+								<div class="d-flex">
+									<h4 class="tx-18 font-weight-semibold mb-0">@Model.TotalUsers</h4>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
+				<div class="row border-end bd-md-e-0 bd-xs-e-0 bd-lg-e-0 bd-xl-e-0  p-3">
+					<div class="col-3 d-flex align-items-center justify-content-center">
+						<div class="circle-icon bg-warning text-center align-self-center overflow-hidden shadow">
+							<i class="bi bi-cash-stack tx-15 text-white"></i>
+						</div>
+					</div>
+					<div class="col-9">
+						<div class="pt-4 pb-3">
+							<div class="d-flex">
+								<h6 class="mb-2 tx-12">Total Balance</h6>
+							</div>
+							<div class="pb-0 mt-0">
+								<div class="d-flex">
+									<h4 class="tx-18 font-weight-semibold mb-0">
+										$@Model.TotalBalance.ToString("N2")
+									</h4>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
+				<div class="row border-end bd-xs-e-0  p-3">
+					<div class="col-3 d-flex align-items-center justify-content-center">
+						<div class="circle-icon bg-secondary text-center align-self-center overflow-hidden shadow">
+							<i class="bi bi-arrow-left-right tx-15 text-white"></i>
+						</div>
+					</div>
+					<div class="col-9">
+						<div class="pt-4 pb-3">
+							<div class="d-flex">
+								<h6 class="mb-2 tx-12">Transfers Today</h6>
+							</div>
+							<div class="pb-0 mt-0">
+								<div class="d-flex">
+									<h4 class="tx-18 font-weight-semibold mb-0">@Model.TransfersToday</h4>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
+				<div class="row  p-3">
+					<div class="col-3 d-flex align-items-center justify-content-center">
+						<div class="circle-icon bg-info text-center align-self-center overflow-hidden shadow">
+							<i class="bi bi-clock-history tx-15 text-white"></i>
+						</div>
+					</div>
+					<div class="col-9">
+						<div class="pt-4 pb-3">
+							<div class="d-flex	">
+								<h6 class="mb-2 tx-12">Transactions Last 24h</h6>
+							</div>
+							<div class="pb-0 mt-0">
+								<div class="d-flex">
+									<h4 class="tx-18 font-weight-semibold mb-0">@Model.TransactionsLast24Hours</h4>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
+				<div class="row  p-3">
+					<div class="col-3 d-flex align-items-center justify-content-center">
+						<div class="circle-icon bg-info text-center align-self-center overflow-hidden shadow">
+							<i class="bi bi-calendar-week tx-15 text-white"></i>
+						</div>
+					</div>
+					<div class="col-9">
+						<div class="pt-4 pb-3">
+							<div class="d-flex	">
+								<h6 class="mb-2 tx-12">Transactions Last 7 Days</h6>
+							</div>
+							<div class="pb-0 mt-0">
+								<div class="d-flex">
+									<h4 class="tx-18 font-weight-semibold mb-0">@Model.TransactionsLast7Days</h4>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
+				<div class="row  p-3">
+					<div class="col-3 d-flex align-items-center justify-content-center">
+						<div class="circle-icon bg-info text-center align-self-center overflow-hidden shadow">
+							<i class="bi bi-shield-exclamation tx-15 text-white"></i>
+						</div>
+					</div>
+					<div class="col-9">
+						<div class="pt-4 pb-3">
+							<div class="d-flex	">
+								<h6 class="mb-2 tx-12">Failed Logins Last 24 Hours</h6>
+							</div>
+							<div class="pb-0 mt-0">
+								<div class="d-flex">
+									<h4 class="tx-18 font-weight-semibold mb-0">@Model.FailedLoginsLast24Hours</h4>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
