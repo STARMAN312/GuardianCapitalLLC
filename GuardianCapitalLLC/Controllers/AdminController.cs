@@ -17,12 +17,7 @@ namespace GuardianCapitalLLC.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
         {
-            var usersInRole = await _userManager.GetUsersInRoleAsync("Admin");
-
-            foreach (var user in usersInRole)
-            {
-                _context.Entry(user).Collection(u => u.BankAccounts).Load();
-            }
+            IList<ApplicationUser> usersInRole = await _userManager.GetUsersInRoleAsync("Admin");
 
             return View(usersInRole);
         }
@@ -36,14 +31,19 @@ namespace GuardianCapitalLLC.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(string id)
         {
-            ApplicationUser user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
+            ApplicationUser? user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
 
             EditAdminVM editUser = new EditAdminVM
             {
                 Id = user.Id,
-                FullName = user.Email,
-                Email = user.Email,
-                PhoneNumber = user.PhoneNumber
+                FullName = user.Email ?? string.Empty,
+                Email = user.Email ?? string.Empty,
+                PhoneNumber = user.PhoneNumber ?? string.Empty
             };
 
             return View(editUser);
@@ -52,16 +52,19 @@ namespace GuardianCapitalLLC.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Details(string id)
         {
-            ApplicationUser user = await _userManager.Users
-                .FirstOrDefaultAsync(u => u.Id == id);
+            ApplicationUser? user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
 
+            if (user == null)
+            {
+                return NotFound(); // Handle the case where the user is null
+            }
 
             AdminViewVM viewModel = new AdminViewVM
             {
                 Id = user.Id,
-                FullName = user.FullName,
-                Email = user.Email,
-                PhoneNumber = user.PhoneNumber
+                FullName = user.FullName ?? string.Empty, // Use null-coalescing operator to handle potential null values
+                Email = user.Email ?? string.Empty,
+                PhoneNumber = user.PhoneNumber ?? string.Empty
             };
 
             return View(viewModel);
@@ -92,7 +95,7 @@ namespace GuardianCapitalLLC.Controllers
 
                 string password = Generate();
 
-                var result = await _userManager.CreateAsync(user, password);
+                IdentityResult result = await _userManager.CreateAsync(user, password);
 
                 if (result.Succeeded)
                 {
@@ -108,7 +111,7 @@ namespace GuardianCapitalLLC.Controllers
                     return RedirectToAction("Details", new { id = user.Id });
                 }
 
-                foreach (var error in result.Errors)
+                foreach (IdentityError error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
@@ -125,7 +128,7 @@ namespace GuardianCapitalLLC.Controllers
         {
             if (ModelState.IsValid)
             {
-                var existingUser = await _userManager.FindByIdAsync(User.Id);
+                ApplicationUser? existingUser = await _userManager.FindByIdAsync(User.Id);
 
                 if (existingUser == null)
                 {
@@ -136,7 +139,7 @@ namespace GuardianCapitalLLC.Controllers
                 existingUser.PhoneNumber = User.PhoneNumber;
                 existingUser.Email = User.Email;
 
-                var result = await _userManager.UpdateAsync(existingUser);
+                IdentityResult result = await _userManager.UpdateAsync(existingUser);
 
                 if (result.Succeeded)
                 {
@@ -145,7 +148,7 @@ namespace GuardianCapitalLLC.Controllers
                 }
                 else
                 {
-                    foreach (var error in result.Errors)
+                    foreach (IdentityError error in result.Errors)
                     {
                         ModelState.AddModelError(string.Empty, error.Description);
                     }
@@ -161,7 +164,7 @@ namespace GuardianCapitalLLC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateNewPassword(string Id)
         {
-            ApplicationUser user = await _userManager.FindByIdAsync(Id);
+            ApplicationUser? user = await _userManager.FindByIdAsync(Id);
 
             if (user == null)
                 return NotFound();
@@ -215,6 +218,43 @@ namespace GuardianCapitalLLC.Controllers
             return new string(password.ToString().OrderBy(_ => RandomNumber(0, int.MaxValue)).ToArray());
         }
 
+        public async Task<IActionResult> Delete(string Id)
+        {
+            ApplicationUser? user = await _userManager.FindByIdAsync(Id);
+
+            return View(user);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(string Id)
+        {
+            ApplicationUser? user = await _context.Users
+                .Include(u => u.BankAccounts!)
+                .ThenInclude(a => a.Transactions)
+                .FirstOrDefaultAsync(u => u.Id == Id);
+
+            if (user == null)
+                return NotFound();
+
+            // Delete transactions first
+            foreach (BankAccount account in user.BankAccounts!)
+            {
+                _context.Transactions.RemoveRange(account.Transactions);
+            }
+
+            // Then delete the bank accounts
+            _context.BankAccounts.RemoveRange(user.BankAccounts);
+
+            // Finally, delete the user
+            await _userManager.DeleteAsync(user);
+
+            // Save all changes
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
+        }
         private static int RandomNumber(int min, int max)
         {
             return RandomNumberGenerator.GetInt32(min, max);

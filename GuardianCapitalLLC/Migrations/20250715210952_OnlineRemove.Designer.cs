@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GuardianCapitalLLC.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250715021222_InstallDB")]
-    partial class InstallDB
+    [Migration("20250715210952_OnlineRemove")]
+    partial class OnlineRemove
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

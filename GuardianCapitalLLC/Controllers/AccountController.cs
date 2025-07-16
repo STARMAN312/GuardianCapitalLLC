@@ -21,14 +21,20 @@ namespace GuardianCapitalLLC.Controllers
         [Authorize(Roles = "Client")]
         public async Task<IActionResult> Index()
         {
-            var currentUser = await _userManager.GetUserAsync(User);
+            ApplicationUser? currentUser = await _userManager.GetUserAsync(User);
 
-            var user = await _context.Users
-                .Include(u => u.BankAccounts)
+            if (currentUser == null)
+                return RedirectToAction("Login");
+
+            ApplicationUser? user = await _context.Users
+                .Include(u => u.BankAccounts!)
                 .ThenInclude(a => a.Transactions)
                 .FirstOrDefaultAsync(u => u.Id == currentUser.Id);
 
-            List<TransactionVM> allTransactions = user.BankAccounts
+            if (user == null)
+                return RedirectToAction("Login");
+
+            List<TransactionVM> allTransactions = user.BankAccounts!
                 .SelectMany(account => account.Transactions.Select(t => new TransactionVM
                 {
                     AccountName = account.Type.ToString(),
@@ -41,9 +47,9 @@ namespace GuardianCapitalLLC.Controllers
 
             AccountViewVM userView = new AccountViewVM
             {
-                FullName = user.FullName,
-                TotalBalance = user.BankAccounts.Sum(a => a.Balance),
-                BankAccounts = user.BankAccounts,
+                FullName = user.FullName!,
+                TotalBalance = user.BankAccounts!.Sum(a => a.Balance),
+                BankAccounts = user.BankAccounts!,
                 Transactions = allTransactions
             };
 
@@ -51,13 +57,188 @@ namespace GuardianCapitalLLC.Controllers
         }
 
         [Authorize(Roles = "Client")]
-        public async Task<IActionResult> TransferFunds()
+        public async Task<IActionResult> TransferFundsToInternalAccount()
         {
             ViewBag.HideBanner = true;
 
-            var currentUser = await _userManager.GetUserAsync(User);
+            ApplicationUser? currentUser = await _userManager.GetUserAsync(User);
 
-            var user = await _context.Users
+            if (currentUser == null)
+                return RedirectToAction("Login");
+
+            ApplicationUser? user = await _context.Users
+                .Include(u => u.BankAccounts)
+                .FirstOrDefaultAsync(u => u.Id == currentUser.Id);
+
+            InternalTransferFundsVM transferFundsVM = new InternalTransferFundsVM
+            {
+                BankAccounts = user!.BankAccounts
+            };
+
+            ViewBag.HideBanner = true;
+
+            return View(transferFundsVM);
+        }
+
+        [Authorize(Roles = "Client")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReviewInternalTransfer(InternalTransferFundsVM model)
+        {
+            ApplicationUser? user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToAction("Login");
+
+            ICollection<BankAccount> bankAccounts = await _context.BankAccounts
+                    .Where(a => a.UserId == user.Id)
+                    .ToListAsync();
+
+            bool isPinValid = await VerifyUserPinAsync(user, model.Pin);
+
+            if (!ModelState.IsValid || !isPinValid)
+            {
+                model.BankAccounts = bankAccounts;
+
+                ModelState.AddModelError(string.Empty, "Fill in all the required input fields correctly.");
+
+                ViewBag.HideBanner = true;
+                return View("TransferFundsToInternalAccount", model);
+            }
+
+            ViewBag.HideBanner = true;
+
+            model.FromAccount = bankAccounts.FirstOrDefault(a => a.Id == model.FromAccountId);
+            model.ToAccount = bankAccounts.FirstOrDefault(a => a.Id == model.ToAccountId);
+
+            return View(model);
+        }
+
+        [Authorize(Roles = "Client")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmInternalTransfer(InternalTransferFundsVM model)
+        {
+            ViewBag.HideBanner = true;
+
+            ApplicationUser? user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            List<BankAccount> bankAccounts = await _context.BankAccounts
+                .Where(a => a.UserId == user.Id)
+                .ToListAsync();
+
+            model.BankAccounts = bankAccounts;
+
+            if (!ModelState.IsValid)
+            {
+                return View("TransferFundsToInternalAccount", model);
+            }
+
+            // Find the source account
+            BankAccount? fromAccount = bankAccounts.FirstOrDefault(a => a.Id == model.FromAccountId);
+            if (fromAccount == null)
+            {
+                ModelState.AddModelError(string.Empty, "Selected source account not found.");
+                return View("TransferFundsToInternalAccount", model);
+            }
+
+            // Example: Verify the PIN (assuming you have a way to verify it securely)
+            bool isPinValid = await VerifyUserPinAsync(user, model.Pin);
+            if (!isPinValid)
+            {
+                ModelState.AddModelError(nameof(model.Pin), "Invalid security PIN.");
+                return View("TransferFundsToInternalAccount", model);
+            }
+
+            // Check sufficient balance
+            if (fromAccount.Balance < model.Amount)
+            {
+                ModelState.AddModelError(string.Empty, "Insufficient funds in the source account.");
+                return View("TransferFundsToInternalAccount", model);
+            }
+
+            if (model.Amount <= 0)
+            {
+                ModelState.AddModelError(string.Empty, "Invalid transfer amount.");
+                return View("TransferFundsToInternalAccount", model);
+            }
+
+            if (model.FromAccountId == model.ToAccountId)
+            {
+                ModelState.AddModelError("", "You must choose different accounts.");
+                return View("TransferFundsToInternalAccount", model);
+            }
+
+            List<BankAccount> accounts = await _context.BankAccounts
+                .Where(a => a.UserId == user.Id && (a.Id == model.FromAccountId || a.Id == model.ToAccountId))
+                .ToListAsync();
+
+            BankAccount? toAccount = accounts.FirstOrDefault(a => a.Id == model.ToAccountId);
+
+            if (fromAccount == null || toAccount == null)
+            {
+                ModelState.AddModelError("", "One or both accounts were not found.");
+                return View("TransferFundsToInternalAccount", model);
+            }
+            if (fromAccount == null || toAccount == null)
+            {
+                ModelState.AddModelError("", "One or both accounts were not found.");
+                TempData["ActiveTab"] = "Transfer";
+                return View("TransferFundsToInternalAccount", model);
+            }
+
+            if (fromAccount.Balance < model.Amount)
+            {
+                TempData["ErrorMessage"] = "Insufficient funds in source account.";
+                TempData["ActiveTab"] = "Transfer";
+                return View("TransferFundsToInternalAccount", model);
+            }
+
+            fromAccount.Balance -= model.Amount;
+            toAccount.Balance += model.Amount;
+
+            _context.Transactions.AddRange(new[]
+            {
+                new Transaction
+                {
+                    Amount = model.Amount,
+                    Type = TransactionType.Transfer,
+                    Description = $"Transfer to {toAccount.Type} account",
+                    BankAccountId = fromAccount.Id,
+                    UserId = user.Id
+                },
+                new Transaction
+                {
+                    Amount = model.Amount,
+                    Type = TransactionType.Deposit,
+                    Description = $"Transfer from {fromAccount.Type} account",
+                    BankAccountId = toAccount.Id,
+                    UserId = user.Id
+                }
+            });
+
+            await _context.SaveChangesAsync();
+
+            TempData["InternalTransferModal"] = "Active";
+
+            return RedirectToAction("Index");
+        }
+
+        [Authorize(Roles = "Client")]
+        public async Task<IActionResult> TransferFundsToExternalAccount()
+        {
+            ViewBag.HideBanner = true;
+
+            ApplicationUser? currentUser = await _userManager.GetUserAsync(User);
+
+            if (currentUser == null)
+                return RedirectToAction("Login");
+
+            ApplicationUser? user = await _context.Users
                 .Include(u => u.BankAccounts)
                 .FirstOrDefaultAsync(u => u.Id == currentUser.Id);
 
@@ -72,9 +253,9 @@ namespace GuardianCapitalLLC.Controllers
 
             ViewBag.PurposeList = purposeList;
 
-            TransferFundsVM transferFundsVM = new TransferFundsVM
+            ExternalTransferFundsVM transferFundsVM = new ExternalTransferFundsVM
             {
-                BankAccounts = user.BankAccounts
+                BankAccounts = user!.BankAccounts
             };
 
             return View(transferFundsVM);
@@ -83,9 +264,12 @@ namespace GuardianCapitalLLC.Controllers
         [Authorize(Roles = "Client")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ReviewTransfer(TransferFundsVM model)
+        public async Task<IActionResult> ReviewExternalTransfer(ExternalTransferFundsVM model)
         {
-            var user = await _userManager.GetUserAsync(User);
+            ApplicationUser? user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToAction("Login");
 
             ICollection<BankAccount> bankAccounts = await _context.BankAccounts
                     .Where(a => a.UserId == user.Id)
@@ -110,7 +294,7 @@ namespace GuardianCapitalLLC.Controllers
 
                 ModelState.AddModelError(string.Empty, "Fill in all the required input fields correctly.");
 
-                return View("TransferFunds", model);
+                return View("TransferFundsToExternalAccount", model);
             }
 
             ViewBag.HideBanner = true;
@@ -123,17 +307,17 @@ namespace GuardianCapitalLLC.Controllers
         [Authorize(Roles = "Client")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Transfer(TransferFundsVM model)
+        public async Task<IActionResult> ConfirmExternalTransfer(ExternalTransferFundsVM model)
         {
             ViewBag.HideBanner = true;
 
-            var user = await _userManager.GetUserAsync(User);
+            ApplicationUser? user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 return Unauthorized();
             }
 
-            var bankAccounts = await _context.BankAccounts
+            List<BankAccount> bankAccounts = await _context.BankAccounts
                 .Where(a => a.UserId == user.Id)
                 .ToListAsync();
 
@@ -141,15 +325,15 @@ namespace GuardianCapitalLLC.Controllers
 
             if (!ModelState.IsValid)
             {
-                return View("TransferFunds", model);
+                return View("TransferFundsToExternalAccount", model);
             }
 
             // Find the source account
-            var fromAccount = bankAccounts.FirstOrDefault(a => a.Id == model.AccountId);
+            BankAccount? fromAccount = bankAccounts.FirstOrDefault(a => a.Id == model.AccountId);
             if (fromAccount == null)
             {
                 ModelState.AddModelError(string.Empty, "Selected source account not found.");
-                return View("TransferFunds", model);
+                return View("TransferFundsToExternalAccount", model);
             }
 
             // Example: Verify the PIN (assuming you have a way to verify it securely)
@@ -157,27 +341,27 @@ namespace GuardianCapitalLLC.Controllers
             if (!isPinValid)
             {
                 ModelState.AddModelError(nameof(model.Pin), "Invalid security PIN.");
-                return View("TransferFunds", model);
+                return View("TransferFundsToExternalAccount", model);
             }
 
             // Check sufficient balance
             if (fromAccount.Balance < model.Amount)
             {
                 ModelState.AddModelError(string.Empty, "Insufficient funds in the source account.");
-                return View("TransferFunds", model);
+                return View("TransferFundsToExternalAccount", model);
             }
 
-            if (model.Amount <= 0 || model.Amount > 1_000_000)
+            if (model.Amount <= 0)
             {
                 ModelState.AddModelError(string.Empty, "Invalid transfer amount.");
-                return View("TransferFunds", model);
+                return View("TransferFundsToExternalAccount", model);
             }
 
             // Deduct amount from source account
             fromAccount.Balance -= model.Amount;
 
             // Add transaction record
-            var transaction = new Transaction
+            Transaction transaction = new Transaction
             {
                 Amount = model.Amount,
                 Type = Enum.Parse<TransactionType>(model.TransferType),
@@ -194,7 +378,7 @@ namespace GuardianCapitalLLC.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["Modal"] = "Active";
+            TempData["ExternalTransferModal"] = "Active";
 
             return RedirectToAction("Index");
         }
@@ -206,7 +390,7 @@ namespace GuardianCapitalLLC.Controllers
             if (!_roleManager.Roles.Any())
             {
                 string[] roles = new[] { "Admin", "Client" };
-                foreach (var role in roles)
+                foreach (string role in roles)
                 {
                     await _roleManager.CreateAsync(new IdentityRole(role));
                 }
@@ -215,7 +399,7 @@ namespace GuardianCapitalLLC.Controllers
             // Ensure default admin user exists
             if (!_userManager.Users.Any())
             {
-                var adminUser = new ApplicationUser
+                ApplicationUser adminUser = new ApplicationUser
                 {
                     UserName = "Irvin",
                     Email = "irvinarielmadrid@gmail.com",
@@ -223,14 +407,14 @@ namespace GuardianCapitalLLC.Controllers
 
                 string adminPassword = "5VQ4=R0I£#rU;lqs'H>p6S(N18gGTxl6G;Z/(@UkIic!PjGv";
 
-                var result = await _userManager.CreateAsync(adminUser, adminPassword);
+                IdentityResult result = await _userManager.CreateAsync(adminUser, adminPassword);
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(adminUser, "Admin");
                 }
                 else
                 {
-                    foreach (var error in result.Errors)
+                    foreach (IdentityError error in result.Errors)
                     {
                         Console.WriteLine($"Admin user creation error: {error.Description}");
                     }
@@ -246,19 +430,22 @@ namespace GuardianCapitalLLC.Controllers
         {
             if (ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, true, lockoutOnFailure: true);
+                Microsoft.AspNetCore.Identity.SignInResult result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, true, lockoutOnFailure: true);
 
                 if (result.Succeeded)
                 {
-                    var user = await _userManager.FindByNameAsync(model.Username);
+                    ApplicationUser? user = await _userManager.FindByNameAsync(model.Username);
 
-                    var roles = await _userManager.GetRolesAsync(user);
-                    if (roles.Contains("Admin"))
+                    if(user != null)
                     {
-                        return RedirectToAction("Index", "Home");
-                    }
+                        IList<string> roles = await _userManager.GetRolesAsync(user);
+                        if (roles.Contains("Admin"))
+                        {
+                            return RedirectToAction("Index", "Home");
+                        }
 
-                    return RedirectToAction("Index", "Account");
+                        return RedirectToAction("Index", "Account");
+                    }
                 }
                 else
                 {
@@ -266,7 +453,7 @@ namespace GuardianCapitalLLC.Controllers
                     {
                         EmailOrUsername = model.Username,
                         AttemptedAt = DateTime.UtcNow,
-                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown"
                     });
 
                     await _context.SaveChangesAsync();
@@ -285,12 +472,15 @@ namespace GuardianCapitalLLC.Controllers
 
         private async Task<bool> VerifyUserPinAsync(ApplicationUser user, string pin)
         {
-            var passwordHasher = new PasswordHasher<ApplicationUser>();
+            return await Task.Run(() =>
+            {
+                if (string.IsNullOrEmpty(user?.PasswordHash))
+                    return false;
 
-            // This compares the hashed stored password with the provided PIN
-            var result = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, pin);
-
-            return result == PasswordVerificationResult.Success;
+                var passwordHasher = new PasswordHasher<ApplicationUser>();
+                var result = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, pin);
+                return result == PasswordVerificationResult.Success;
+            });
         }
 
     }

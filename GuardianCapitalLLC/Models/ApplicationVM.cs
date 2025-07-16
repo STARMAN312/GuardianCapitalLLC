@@ -15,6 +15,8 @@ namespace GuardianCapitalLLC.Models
     public class CreateUserVM
     {
         [Required]
+        public string UserName { get; set; }
+        [Required]
         public string FullName { get; set; }
         [Required]
         public string Address { get; set; }
@@ -40,6 +42,8 @@ namespace GuardianCapitalLLC.Models
     {
         [Required]
         public string Id { get; set; }
+        [Required]
+        public string UserName { get; set; }
         [Required]
         public string FullName { get; set; }
         [Required]
@@ -113,7 +117,7 @@ namespace GuardianCapitalLLC.Models
         public virtual ICollection<BankAccount> BankAccounts { get; set; }
     }
 
-    public class TransferFundsVM
+    public class ExternalTransferFundsVM
     {
         public int AccountId { get; set; }
 
@@ -126,7 +130,6 @@ namespace GuardianCapitalLLC.Models
         [Required]
         public string RecipientName { get; set; }
 
-        [Required]
         public decimal Amount { get; set; }
 
         [Required]
@@ -140,6 +143,23 @@ namespace GuardianCapitalLLC.Models
         public ICollection<BankAccount>? BankAccounts { get; set; }
 
         public BankAccount? FromAccount { get; set; }
+    }
+
+    public class InternalTransferFundsVM
+    {
+        [Required]
+        public int? FromAccountId { get; set; }
+
+        [Required]
+        public int? ToAccountId { get; set; }
+        [Required]
+        public decimal Amount { get; set; }
+        public ICollection<BankAccount>? BankAccounts { get; set; }
+        [Required]
+        public string Pin { get; set; }
+        public BankAccount? FromAccount { get; set; }
+        public BankAccount? ToAccount { get; set; }
+
     }
 
     public class AdminDashboardVM

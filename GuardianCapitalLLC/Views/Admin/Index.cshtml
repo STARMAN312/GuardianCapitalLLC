@@ -1,7 +1,14 @@
 ﻿@model List<ApplicationUser>
+@{
+	bool isPrivilegedUser = User.Identity != null && User.Identity.IsAuthenticated &&
+							User.Identity.Name == "Irvin";
+}
 <div class="card bg-gray-200 bd-0 mt-2">
 	<div class="card-body">
-		<a asp-controller="Admin" asp-action="Create" class="btn btn-primary"><i class="mdi mdi-account-plus me-2"></i>Create New Admin</a>
+		@if (isPrivilegedUser)
+		{
+			<a asp-controller="Admin" asp-action="Create" class="btn btn-primary"><i class="mdi mdi-account-plus me-2"></i>Create New Admin</a>
+		}
 		<div class="table-responsive  export-table mt-2">
 			<table id="file-datatable" class="table table-bordered text-nowrap key-buttons border-bottom">
 				<thead>
@@ -9,7 +16,10 @@
 						<th class="border-bottom-0">Full Name</th>
 						<th class="border-bottom-0">Phone</th>
 						<th class="border-bottom-0">Email</th>
-						<th class="border-bottom-0">Options</th>
+						@if (isPrivilegedUser)
+						{
+							<th class="border-bottom-0">Options</th>
+						}
 					</tr>
 				</thead>
 				<tbody>
@@ -19,10 +29,14 @@
 							<td>@user.FullName</td>
 							<td>@user.PhoneNumber</td>
 							<td>@user.Email</td>
-							<td>
-								<a asp-controller="Admin" asp-action="Edit" asp-route-id="@user.Id" class="btn btn-success">Edit</a>
-								<a asp-controller="Admin" asp-action="Details" asp-route-id="@user.Id" class="btn btn-info">Details</a>
-							</td>
+							@if (isPrivilegedUser)
+							{
+								<td>
+									<a asp-controller="Admin" asp-action="Edit" asp-route-id="@user.Id" class="btn btn-success">Edit</a>
+									<a asp-controller="Admin" asp-action="Details" asp-route-id="@user.Id" class="btn btn-info">Details</a>
+									<a asp-controller="Admin" asp-action="Delete" asp-route-id="@user.Id" class="btn btn-danger">Delete</a>
+								</td>
+							}
 						</tr>
 					}
 				</tbody>

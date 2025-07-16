@@ -16,17 +16,20 @@ namespace GuardianCapitalLLC.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index(string Id)
         {
-            ApplicationUser user = await _context.Users
-                .Include(u => u.BankAccounts)
+            ApplicationUser? user = await _context.Users
+                .Include(u => u.BankAccounts!)
                 .ThenInclude(a => a.Transactions)
                 .FirstOrDefaultAsync(u => u.Id == Id);
+
+            if (user == null)
+                return NotFound();
 
             BankAccountsView BankAccounts = new BankAccountsView
             {
                 UserId = user.Id,
-                FullName = user.FullName,
-                TotalBalance = user.BankAccounts.Sum(a => a.Balance),
-                BankAccounts = user.BankAccounts,
+                FullName = user.FullName!,
+                TotalBalance = user.BankAccounts!.Sum(a => a.Balance),
+                BankAccounts = user.BankAccounts!,
             };
 
             if (TempData["ActiveTab"] == null)
@@ -56,17 +59,23 @@ namespace GuardianCapitalLLC.Controllers
                 return RedirectToAction("Index", new { Id = UserId });
             }
 
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == UserId);
+            ApplicationUser? user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == UserId);
             if (user == null)
                 return Unauthorized();
 
-            var accounts = await _context.BankAccounts
+            List<BankAccount> accounts = await _context.BankAccounts
                 .Where(a => a.UserId == user.Id && (a.Id == fromAccountId || a.Id == toAccountId))
                 .ToListAsync();
 
-            var fromAccount = accounts.FirstOrDefault(a => a.Id == fromAccountId);
-            var toAccount = accounts.FirstOrDefault(a => a.Id == toAccountId);
+            BankAccount? fromAccount = accounts.FirstOrDefault(a => a.Id == fromAccountId);
+            BankAccount? toAccount = accounts.FirstOrDefault(a => a.Id == toAccountId);
 
+            if (fromAccount == null || toAccount == null)
+            {
+                ModelState.AddModelError("", "One or both accounts were not found.");
+                TempData["ActiveTab"] = "Transfer";
+                return RedirectToAction("Index", new { Id = UserId });
+            }
             if (fromAccount == null || toAccount == null)
             {
                 ModelState.AddModelError("", "One or both accounts were not found.");
@@ -123,15 +132,15 @@ namespace GuardianCapitalLLC.Controllers
                 return RedirectToAction("Index", new { Id = UserId });
             }
 
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == UserId);
+            ApplicationUser? user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == UserId);
             if (user == null)
                 return Unauthorized();
 
-            var accounts = await _context.BankAccounts
+            List<BankAccount> accounts = await _context.BankAccounts
                 .Where(a => a.UserId == user.Id && (a.Id == AccountId))
                 .ToListAsync();
 
-            var Account = accounts.FirstOrDefault(a => a.Id == AccountId);
+            BankAccount? Account = accounts.FirstOrDefault(a => a.Id == AccountId);
 
             if (Account == null)
             {
@@ -173,15 +182,15 @@ namespace GuardianCapitalLLC.Controllers
                 return RedirectToAction("Index", new { Id = UserId });
             }
 
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == UserId);
+            ApplicationUser? user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == UserId);
             if (user == null)
                 return Unauthorized();
 
-            var accounts = await _context.BankAccounts
+            List<BankAccount> accounts = await _context.BankAccounts
                 .Where(a => a.UserId == user.Id && (a.Id == AccountId))
                 .ToListAsync();
 
-            var Account = accounts.FirstOrDefault(a => a.Id == AccountId);
+            BankAccount? Account = accounts.FirstOrDefault(a => a.Id == AccountId);
 
             if (Account == null)
             {

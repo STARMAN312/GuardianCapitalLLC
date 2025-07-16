@@ -14,7 +14,7 @@
 							<div class="ms-auto wd-45p tx-14">
 								<div class="float-end">
 									<h5 class="mb-1 tx-12 font-weight-sembold text-dark">Total Account Balance</h5>
-									<p class="mb-0 tx-20 text-success">$@Model.TotalBalance</p>
+									<p class="mb-0 tx-20 text-success">$@Model.TotalBalance.ToString("N2")</p>
 								</div>
 							</div>
 						</div>
@@ -65,7 +65,7 @@
 										</div>
 										<div class="ms-auto wd-45p tx-14">
 											<div class="float-end">
-												<p class="mb-0 tx-20 text-dark">$@BankAccount.Balance</p>
+												<p class="mb-0 tx-20 text-dark">$@BankAccount.Balance.ToString("N2")</p>
 												<h5 class="mb-1 tx-12 font-weight-sembold text-dark">Available Balance</h5>
 											</div>
 										</div>
@@ -91,7 +91,7 @@
 								<option disabled selected value="">-- Select source account --</option>
 								@foreach (var acc in Model.BankAccounts)
 								{
-									<option value="@acc.Id">@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1") - $@acc.Balance</option>
+									<option value="@acc.Id">@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1") - $@acc.Balance.ToString("N2")</option>
 								}
 							</select>
 						</div>
@@ -102,7 +102,7 @@
 								<option disabled selected value="">-- Select destination account --</option>
 								@foreach (var acc in Model.BankAccounts)
 								{
-									<option value="@acc.Id">@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1") - $@acc.Balance</option>
+									<option value="@acc.Id">@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1") - $@acc.Balance.ToString("N2")</option>
 								}
 							</select>
 						</div>
@@ -110,8 +110,9 @@
 						<div class="form-group">
 							<label for="amount">Amount</label>
 							<div class="input-group mb-3">
+								<input type="hidden" name="amount" id="HiddenAmount1" />
 								<span class="input-group-text" id="basic-addon1">$</span>
-								<input type="text" name="amount" class="form-control" step="0.01" min="0.01" />
+								<input type="text" class="form-control amount-input" step="0.01" min="0.01" data-hidden="#HiddenAmount1" />
 							</div>	
 						</div>
 
@@ -145,7 +146,7 @@
 								<option disabled selected value="">-- Select account to add balance --</option>
 								@foreach (var acc in Model.BankAccounts)
 								{
-									<option value="@acc.Id">@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1") - $@acc.Balance</option>
+									<option value="@acc.Id">@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1") - $@acc.Balance.ToString("N2")</option>
 								}
 							</select>
 						</div>
@@ -153,8 +154,9 @@
 						<div class="form-group">
 							<label for="amount">Amount to Add</label>
 							<div class="input-group mb-3">
+								<input type="hidden" name="amount" id="HiddenAmount2" />
 								<span class="input-group-text" id="basic-addon1">$</span>
-								<input type="text" name="amount" class="form-control" step="0.01" min="0.01" />
+								<input type="text" class="form-control amount-input" step="0.01" min="0.01" data-hidden="#HiddenAmount2" />
 							</div>
 						</div>
 
@@ -188,7 +190,7 @@
 								<option disabled selected value="">-- Select account to withdraw balance --</option>
 								@foreach (var acc in Model.BankAccounts)
 								{
-									<option value="@acc.Id">@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1") - $@acc.Balance</option>
+									<option value="@acc.Id">@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1") - $@acc.Balance.ToString("N2")</option>
 								}
 							</select>
 						</div>
@@ -196,8 +198,9 @@
 						<div class="form-group">
 							<label for="amount">Amount to Withdraw</label>
 							<div class="input-group mb-3">
+								<input type="hidden" name="amount" id="HiddenAmount3" />
 								<span class="input-group-text" id="basic-addon1">$</span>
-								<input type="text" name="amount" class="form-control" step="0.01" min="0.01" />
+								<input type="text" name="amount" class="form-control amount-input" step="0.01" min="0.01" data-hidden="#HiddenAmount3" />
 							</div>
 						</div>
 
@@ -212,20 +215,102 @@
 </div>
 
 <script>
+
+	document.addEventListener('DOMContentLoaded', function () {
+		document.querySelectorAll('.amount-input').forEach(input => {
+			input.addEventListener('input', function (e) {
+				let value = input.value;
+
+				// Save cursor position
+				let selectionStart = input.selectionStart;
+				const commasBefore = (value.slice(0, selectionStart).match(/,/g) || []).length;
+
+				// Sanitize input
+				value = value.replace(/[^\d.]/g, '');
+
+				const parts = value.split('.');
+				if (parts.length > 2) {
+					value = parts.shift() + '.' + parts.join('');
+				}
+
+				const endsWithDot = value.endsWith('.');
+				const [intPart, decimalPartRaw] = value.split('.');
+				let decimalPart = decimalPartRaw || '';
+
+				if (decimalPart.length > 2) {
+					decimalPart = decimalPart.substring(0, 2);
+				}
+
+				const intFormatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+				const formattedValue = endsWithDot
+					? `${intFormatted}.`
+					: decimalPart
+						? `${intFormatted}.${decimalPart}`
+						: intFormatted;
+
+				input.value = formattedValue;
+
+				// Fix cursor position
+				const commasAfter = (formattedValue.slice(0, selectionStart).match(/,/g) || []).length;
+				const commaDifference = commasAfter - commasBefore;
+				let newPos = selectionStart + commaDifference;
+
+				if (endsWithDot && newPos === formattedValue.length - 1) {
+					newPos = formattedValue.length;
+				}
+
+				input.setSelectionRange(newPos, newPos);
+
+				// Update corresponding hidden input
+				const hiddenSelector = input.getAttribute('data-hidden');
+				const hiddenInput = document.querySelector(hiddenSelector);
+				if (hiddenInput) {
+					hiddenInput.value = decimalPart || endsWithDot
+						? intPart + '.' + decimalPart
+						: intPart;
+				}
+			});
+		});
+	});
+
 	document.addEventListener('DOMContentLoaded', function () {
 		const fromSelect = document.getElementById('fromAccount');
 		const toSelect = document.getElementById('toAccount');
 
-		function updateToOptions() {
+		function updateSelectOptions() {
 			const selectedFrom = fromSelect.value;
+			const selectedTo = toSelect.value;
+
+			// Enable all options first
+			for (const option of fromSelect.options) {
+				option.disabled = false;
+			}
 			for (const option of toSelect.options) {
-				option.disabled = option.value === selectedFrom;
+				option.disabled = false;
+			}
+
+			// Disable selected value in the opposite select
+			if (selectedTo) {
+				for (const option of fromSelect.options) {
+					if (option.value === selectedTo) {
+						option.disabled = true;
+					}
+				}
+			}
+
+			if (selectedFrom) {
+				for (const option of toSelect.options) {
+					if (option.value === selectedFrom) {
+						option.disabled = true;
+					}
+				}
 			}
 		}
 
-		fromSelect.addEventListener('change', updateToOptions);
+		fromSelect.addEventListener('change', updateSelectOptions);
+		toSelect.addEventListener('change', updateSelectOptions);
 
-		// Run once on load in case a default is selected
-		updateToOptions();
+		// Initial update in case defaults are set
+		updateSelectOptions();
 	});
 </script>

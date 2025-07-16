@@ -1,4 +1,4 @@
-﻿@model TransferFundsVM
+﻿@model ExternalTransferFundsVM
 @using System.Text.RegularExpressions
 
 @{
@@ -8,7 +8,8 @@
 <div class="mt-2 account-information">
 	<div class="card bg-gray-200 bd-0">
 		<div class="card-body">
-			<form asp-action="ReviewTransfer">
+			<form asp-action="ReviewExternalTransfer">
+				<input type="hidden" id="Amount" name="Amount" />
 				@if (!ViewData.ModelState.IsValid)
 				{
 					<div class="card bg-warning text-white">
@@ -37,7 +38,7 @@
 						<option disabled selected value="">-- Select source account --</option>
 						@foreach (var acc in Model.BankAccounts)
 						{
-							<option value="@acc.Id">@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1") - $@acc.Balance</option>
+							<option value="@acc.Id">@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1") - $@acc.Balance.ToString("N2")</option>
 						}
 					</select>
 				</div>
@@ -58,7 +59,7 @@
 					<label>Amount</label>
 					<div class="input-group mb-3">
 						<span class="input-group-text bg-info-transparent text-info" id="basic-addon1">$</span>
-						<input type="text" asp-for="Amount" class="form-control" step="0.01" min="0.01" placeholder="0.00" />
+						<input type="text" id="AmountInput" name="Amount" class="form-control" placeholder="0.00" />
 					</div>
 				</div>
 				<div class="form-group mt-2">
@@ -83,3 +84,79 @@
 		</div>
 	</div>
 </div>
+
+<script>
+
+	const formattedInput = document.getElementById('AmountInput');
+	const hiddenInput = document.getElementById('Amount');
+
+	formattedInput.addEventListener('input', function () {
+		const rawValue = formattedInput.value.replace(/,/g, '');
+		hiddenInput.value = rawValue;
+	});
+
+		document.getElementById('AmountInput').addEventListener('input', function (e) {
+		const input = e.target;
+		let value = input.value;
+
+		// Save cursor position before formatting
+		let selectionStart = input.selectionStart;
+		let selectionEnd = input.selectionEnd;
+
+		// Count commas before formatting to calculate position change later
+		const commasBefore = (value.slice(0, selectionStart).match(/,/g) || []).length;
+
+		// Remove all except digits and dot
+		value = value.replace(/[^\d.]/g, '');
+
+		// Allow only one dot
+		const parts = value.split('.');
+		if (parts.length > 2) {
+			value = parts.shift() + '.' + parts.join('');
+		}
+
+		// Check if ends with a dot (to preserve)
+		const endsWithDot = value.endsWith('.');
+
+		// Split integer and decimal parts
+		const [intPart, decimalPartRaw] = value.split('.');
+		let decimalPart = decimalPartRaw || '';
+
+		if (decimalPart.length > 2) {
+			decimalPart = decimalPart.substring(0, 2);
+		}
+
+		// Format integer with commas
+		const intFormatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+		// Rebuild formatted value
+		const formattedValue = endsWithDot
+			? `${intFormatted}.`
+			: decimalPart
+			? `${intFormatted}.${decimalPart}`
+			: intFormatted;
+
+		// Set the formatted value
+		input.value = formattedValue;
+
+		// Count commas after formatting (before cursor)
+		const commasAfter = (formattedValue.slice(0, selectionStart).match(/,/g) || []).length;
+
+		// Calculate the new cursor position based on commas added/removed
+		const commaDifference = commasAfter - commasBefore;
+		let newPos = selectionStart + commaDifference;
+
+		// Handle edge cases where cursor is after the dot
+		if (endsWithDot && newPos === formattedValue.length - 1) {
+			newPos = formattedValue.length;
+		}
+
+		// Set cursor position
+		input.setSelectionRange(newPos, newPos);
+
+		// Update hidden input with raw value (no commas)
+		document.getElementById('Amount').value = decimalPart || endsWithDot
+			? intPart + '.' + decimalPart
+			: intPart;
+	});
+</script>

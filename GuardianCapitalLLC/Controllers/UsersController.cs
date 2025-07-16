@@ -17,11 +17,11 @@ namespace GuardianCapitalLLC.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
         {
-            var usersInRole = await _userManager.GetUsersInRoleAsync("Client");
+            IList<ApplicationUser> usersInRole = await _userManager.GetUsersInRoleAsync("Client");
 
             foreach (var user in usersInRole)
             {
-                _context.Entry(user).Collection(u => u.BankAccounts).Load();
+                _context.Entry(user).Collection(u => u.BankAccounts!).Load();
             }
 
             return View(usersInRole);
@@ -36,17 +36,21 @@ namespace GuardianCapitalLLC.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(string id)
         {
-            ApplicationUser user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
+            ApplicationUser? user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+                return NotFound();
 
             EditUserVM editUser = new EditUserVM
             {
                 Id = user.Id,
-                FullName = user.FullName,
-                Address = user.Address,
-                WorkEmail = user.WorkEmail,
-                PersonalEmail = user.PersonalEmail,
-                WorkPhone = user.WorkPhone,
-                PersonalPhone = user.PersonalPhone
+                UserName = user.UserName!,
+                FullName = user.FullName!,
+                Address = user.Address!,
+                WorkEmail = user.WorkEmail!,
+                PersonalEmail = user.PersonalEmail!,
+                WorkPhone = user.WorkPhone!,
+                PersonalPhone = user.PersonalPhone!
             };
 
             return View(editUser);
@@ -55,14 +59,14 @@ namespace GuardianCapitalLLC.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Details(string id)
         {
-            ApplicationUser user = await _userManager.Users
-                .Include(u => u.BankAccounts)
+            ApplicationUser? user = await _userManager.Users
+                .Include(u => u.BankAccounts!)
                 .ThenInclude(a => a.Transactions)
                 .FirstOrDefaultAsync(u => u.Id == id);
 
             if (user == null) return NotFound();
 
-            List<TransactionVM> allTransactions = user.BankAccounts
+            List<TransactionVM> allTransactions = user.BankAccounts!
                 .SelectMany(account => account.Transactions.Select(t => new TransactionVM
                 {
                     AccountName = account.Type.ToString(),
@@ -76,13 +80,13 @@ namespace GuardianCapitalLLC.Controllers
             UserViewVM viewModel = new UserViewVM
             {
                 Id = user.Id,
-                FullName = user.FullName,
-                Address = user.Address,
-                WorkEmail = user.WorkEmail,
-                PersonalEmail = user.PersonalEmail,
-                WorkPhone = user.WorkPhone,
-                PersonalPhone = user.PersonalPhone,
-                BankAccounts = user.BankAccounts,
+                FullName = user.FullName!,
+                Address = user.Address!,
+                WorkEmail = user.WorkEmail!,
+                PersonalEmail = user.PersonalEmail!,
+                WorkPhone = user.WorkPhone!,
+                PersonalPhone = user.PersonalPhone!,
+                BankAccounts = user.BankAccounts!,
                 Transactions = allTransactions
             };
 
@@ -98,7 +102,7 @@ namespace GuardianCapitalLLC.Controllers
             {
                 ApplicationUser user = new ApplicationUser
                 {
-                    UserName = User.FullName.Replace(" ", ""),
+                    UserName = User.UserName,
                     PhoneNumber = User.PersonalPhone,
                     Email = User.PersonalEmail,
                     FullName = User.FullName,
@@ -117,13 +121,13 @@ namespace GuardianCapitalLLC.Controllers
 
                 int pin = BitConverter.ToUInt16(bytes, 0) % 10000;
 
-                var result = await _userManager.CreateAsync(user, pin.ToString("D4"));
+                IdentityResult result = await _userManager.CreateAsync(user, pin.ToString("D4"));
 
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, "Client");
 
-                    var accounts = new List<BankAccount>
+                    List<BankAccount> accounts = new List<BankAccount>
                     {
                         new BankAccount
                         {
@@ -156,7 +160,7 @@ namespace GuardianCapitalLLC.Controllers
                     return RedirectToAction("Details", new { id = user.Id });
                 }
 
-                foreach (var error in result.Errors)
+                foreach (IdentityError error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
@@ -173,14 +177,14 @@ namespace GuardianCapitalLLC.Controllers
         {
             if (ModelState.IsValid)
             {
-                var existingUser = await _userManager.FindByIdAsync(User.Id);
+                ApplicationUser? existingUser = await _userManager.FindByIdAsync(User.Id);
 
                 if (existingUser == null)
                 {
                     return NotFound();
                 }
 
-                existingUser.UserName = User.FullName.Replace(" ", "");
+                existingUser.UserName = User.UserName.Replace(" ", "");
                 existingUser.FullName = User.FullName;
                 existingUser.Address = User.Address;
                 existingUser.WorkEmail = User.WorkEmail;
@@ -188,7 +192,7 @@ namespace GuardianCapitalLLC.Controllers
                 existingUser.WorkPhone = User.WorkPhone;
                 existingUser.PersonalPhone = User.PersonalPhone;
 
-                var result = await _userManager.UpdateAsync(existingUser);
+                IdentityResult result = await _userManager.UpdateAsync(existingUser);
 
                 if (result.Succeeded)
                 {
@@ -197,7 +201,7 @@ namespace GuardianCapitalLLC.Controllers
                 }
                 else
                 {
-                    foreach (var error in result.Errors)
+                    foreach (IdentityError error in result.Errors)
                     {
                         ModelState.AddModelError(string.Empty, error.Description);
                     }
@@ -209,20 +213,28 @@ namespace GuardianCapitalLLC.Controllers
         }
 
         [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Delete(string Id)
+        {
+            ApplicationUser? user = await _userManager.FindByIdAsync(Id);
+
+            return View(user);
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string Id)
         {
-            var user = await _context.Users
-                .Include(u => u.BankAccounts)
-                    .ThenInclude(a => a.Transactions)
+            ApplicationUser? user = await _context.Users
+                .Include(u => u.BankAccounts!)
+                .ThenInclude(a => a.Transactions)
                 .FirstOrDefaultAsync(u => u.Id == Id);
 
             if (user == null)
                 return NotFound();
 
             // Delete transactions first
-            foreach (var account in user.BankAccounts)
+            foreach (BankAccount account in user.BankAccounts!)
             {
                 _context.Transactions.RemoveRange(account.Transactions);
             }
@@ -244,7 +256,7 @@ namespace GuardianCapitalLLC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateNewPassword(string Id)
         {
-            ApplicationUser user = await _userManager.FindByIdAsync(Id);
+            ApplicationUser? user = await _userManager.FindByIdAsync(Id);
 
             if (user == null)
                 return NotFound();
@@ -276,7 +288,7 @@ namespace GuardianCapitalLLC.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateBalance(string id)
+        public IActionResult UpdateBalance(string id)
         {
             return View();
         }

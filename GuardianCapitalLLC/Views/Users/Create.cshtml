@@ -16,6 +16,10 @@
 			<form asp-action="Create">
 				<div>
 					<div class="form-group">
+						<label for="InputID" class="form-label" id="usernameLabel">User Name</label>
+						<input asp-for="UserName" type="text" class="form-control">
+					</div>
+					<div class="form-group">
 						<label for="InputID" class="form-label" id="usernameLabel">Full Name</label>
 						<input asp-for="FullName" type="text" class="form-control">
 					</div>

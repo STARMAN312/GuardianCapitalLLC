@@ -57,7 +57,7 @@
 							@foreach (BankAccount bankAccount in Model.BankAccounts)
 							{
 								<div>
-									<label>@Regex.Replace(bankAccount.Type.ToString(), "(\\B[A-Z])", " $1") Account:</label><span class="tx-medium"><strong>$@bankAccount.Balance</strong></span>
+									<label>@Regex.Replace(bankAccount.Type.ToString(), "(\\B[A-Z])", " $1") Account:</label><span class="tx-medium"><strong>$@bankAccount.Balance.ToString("N2")</strong></span>
 								</div>
 							}
 						</div>
@@ -92,11 +92,11 @@
 									<td>@Regex.Replace(transaction.Type.ToString(), "(\\B[A-Z])", " $1")</td>
 									@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal")
 									{
-										<td>-$@transaction.Amount</td>
+										<td>-$@transaction.Amount.ToString("N2")</td>
 									}
 									else
 									{
-										<td>+$@transaction.Amount</td>
+										<td>+$@transaction.Amount.ToString("N2")</td>
 									}
 								</tr>
 							}

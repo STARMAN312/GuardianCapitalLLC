@@ -18,8 +18,12 @@ public class HomeController(ApplicationDbContext context, ILogger<HomeController
     public async Task<IActionResult> IndexAsync()
     {
 
-        var user = await _userManager.GetUserAsync(User);
-        string fullName = user.FullName;
+        ApplicationUser? user = await _userManager.GetUserAsync(User);
+
+        if (user == null)
+            return RedirectToAction("Login", "Account");
+
+        string fullName = user.FullName!;
 
         // Fetch dashboard data
         DateTime now = DateTime.UtcNow;
@@ -27,35 +31,35 @@ public class HomeController(ApplicationDbContext context, ILogger<HomeController
         DateTime last7d = now.AddDays(-7);
         DateTime today = now.Date;
 
-        var clientUsers = await _userManager.GetUsersInRoleAsync("Client");
-        var totalUsers = clientUsers.Count;
+        IList<ApplicationUser> clientUsers = await _userManager.GetUsersInRoleAsync("Client");
+        int totalUsers = clientUsers.Count;
 
-        var totalBalance = await _context.BankAccounts.SumAsync(a => a.Balance);
+        decimal totalBalance = await _context.BankAccounts.SumAsync(a => a.Balance);
 
-        var transactionsLast24h = await _context.Transactions
+        int transactionsLast24h = await _context.Transactions
             .CountAsync(t => t.Date >= last24h);
 
-        var transactionsLast7d = await _context.Transactions
+        int transactionsLast7d = await _context.Transactions
             .CountAsync(t => t.Date >= last7d);
 
-        var transactionsAllTime = await _context.Transactions.CountAsync();
+        int transactionsAllTime = await _context.Transactions.CountAsync();
 
-        var transfersToday = await _context.Transactions
+        int transfersToday = await _context.Transactions
             .CountAsync(t => t.Date >= today && t.Type == TransactionType.Transfer);
 
-        var failedLoginsLast24h = await _context.FailedLoginLog
+        int failedLoginsLast24h = await _context.FailedLoginLog
             .CountAsync(f => f.AttemptedAt >= last24h);
 
-        var dashboardVM = new AdminDashboardVM
+        AdminDashboardVM dashboardVM = new AdminDashboardVM
         {
-            Username = user.UserName,
+            Username = user.UserName!,
             TotalUsers = totalUsers,
             TotalBalance = totalBalance,
             TransactionsLast24Hours = transactionsLast24h,
             TransactionsLast7Days = transactionsLast7d,
             TransactionsAllTime = transactionsAllTime,
             TransfersToday = transfersToday,
-            FailedLoginsLast24Hours = failedLoginsLast24h
+            FailedLoginsLast24Hours = failedLoginsLast24h,
         };
 
         return View(dashboardVM);

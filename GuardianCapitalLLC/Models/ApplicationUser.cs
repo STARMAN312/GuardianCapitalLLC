@@ -13,5 +13,6 @@ namespace GuardianCapitalLLC.Models
         public string? PersonalEmail { get; set; }
         public virtual ICollection<BankAccount>? BankAccounts { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
     }
 }
