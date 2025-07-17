@@ -13,8 +13,8 @@ namespace GuardianCapitalLLC.Data
 
         public DbSet<BankAccount> BankAccounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
-
         public DbSet<FailedLoginLog> FailedLoginLog { get; set; }
+        public DbSet<UserFile> UserFiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

@@ -1,18 +1,21 @@
 using GuardianCapitalLLC.Data;
 using GuardianCapitalLLC.Models;
+using GuardianCapitalLLC.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.Net.Http;
+using System.Text.Json;
 namespace GuardianCapitalLLC.Controllers;
 
-public class HomeController(ApplicationDbContext context, ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager) : Controller
+public class HomeController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, MarketDataService marketDataService) : Controller
 {
+
     private readonly ApplicationDbContext _context = context;
-    private readonly ILogger<HomeController> _logger = logger;
     private readonly UserManager<ApplicationUser> _userManager = userManager;
-    private readonly RoleManager<IdentityRole> _roleManager = roleManager;
+    private readonly MarketDataService _marketDataService = marketDataService;
 
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> IndexAsync()
@@ -50,6 +53,40 @@ public class HomeController(ApplicationDbContext context, ILogger<HomeController
         int failedLoginsLast24h = await _context.FailedLoginLog
             .CountAsync(f => f.AttemptedAt >= last24h);
 
+        var httpClient = new HttpClient();
+        string url = $"https://api.exchangerate-api.com/v4/latest/USD";
+
+        ExchangeRatesResponse? ratesResponse = null;
+        try
+        {
+            ratesResponse = await httpClient.GetFromJsonAsync<ExchangeRatesResponse>(url);
+        }
+        catch
+        {
+            return NotFound();
+        }
+
+        Dictionary<string, decimal> convertedBalances = new Dictionary<string, decimal>();
+
+        if (ratesResponse != null)
+        {
+            string[] targetCurrencies = new[] { "USD", "CAD", "EUR", "MXN", "GBP", "JPY", "KWD" };
+
+            foreach (string currency in targetCurrencies)
+            {
+                if (currency == "USD")
+                {
+                    convertedBalances["USD"] = Math.Round(totalBalance, 2);
+                }
+                else if (ratesResponse.Rates.TryGetValue(currency, out var rate))
+                {
+                    convertedBalances[currency] = Math.Round(totalBalance * rate, 2);
+                }
+            }
+        }
+
+        var marketData = await _marketDataService.GetMarketDataAsync();
+
         AdminDashboardVM dashboardVM = new AdminDashboardVM
         {
             Username = user.UserName!,
@@ -60,6 +97,8 @@ public class HomeController(ApplicationDbContext context, ILogger<HomeController
             TransactionsAllTime = transactionsAllTime,
             TransfersToday = transfersToday,
             FailedLoginsLast24Hours = failedLoginsLast24h,
+            ConvertedBalances = convertedBalances,
+            MarketData = marketData,
         };
 
         return View(dashboardVM);

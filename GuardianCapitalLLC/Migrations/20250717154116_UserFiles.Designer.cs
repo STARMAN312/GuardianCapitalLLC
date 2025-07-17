@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GuardianCapitalLLC.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250715210952_OnlineRemove")]
-    partial class OnlineRemove
+    [Migration("20250717154116_UserFiles")]
+    partial class UserFiles
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -157,6 +157,37 @@ namespace GuardianCapitalLLC.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("FailedLoginLog");
+                });
+
+            modelBuilder.Entity("GuardianCapitalLLC.Models.UserFile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserFiles");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -340,6 +371,17 @@ namespace GuardianCapitalLLC.Migrations
                 {
                     b.HasOne("GuardianCapitalLLC.Models.ApplicationUser", "User")
                         .WithMany("BankAccounts")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GuardianCapitalLLC.Models.UserFile", b =>
+                {
+                    b.HasOne("GuardianCapitalLLC.Models.ApplicationUser", "User")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

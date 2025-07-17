@@ -1,5 +1,6 @@
 using GuardianCapitalLLC.Data;
 using GuardianCapitalLLC.Models;
+using GuardianCapitalLLC.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Configuration;
@@ -19,12 +20,17 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddSession();
 
+builder.Services.AddHttpClient();
+
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped<MarketDataService>();
+
 
 builder.Services.ConfigureApplicationCookie(options =>
 {

@@ -49,16 +49,22 @@
 				<!-- container -->
 				<div class="main-container container-fluid">
 					<!-- breadcrumb -->
-					<div class="breadcrumb-header justify-content-between">
+					<div class="breadcrumb-header justify-content-between align-items-center">
 						<div class="left-content">
 							<img src="~/img/brand/logo.png">
 						</div>
-						@if (User.IsInRole("Client"))
-						{
-							<div class="justify-content-center mt-2">
-								<a asp-controller="Account" asp-action="Logout" class="btn btn-danger">Log Out</a>
-							</div>
-						}
+						<div class="justify-content-center mt-2">
+							<ol class="breadcrumb">
+								<li class="breadcrumb-item">
+									@if (User.IsInRole("Client"))
+									{
+										<div class="justify-content-center mt-2">
+											<a asp-controller="Account" asp-action="Logout" class="btn btn-danger">Log Out</a>
+										</div>
+									}
+								</li>
+							</ol>
+						</div>
 					</div>
 					<!-- /breadcrumb -->
 					@if (ViewBag.HideBanner != true)

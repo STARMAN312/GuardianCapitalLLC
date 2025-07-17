@@ -1,0 +1,37 @@
+﻿.news-ticker-wrapper {
+    width: 100%;
+    overflow: hidden;
+    background-color: #111;
+    color: white;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.news-ticker {
+    white-space: nowrap;
+    display: inline-block;
+    animation: scroll-left 40s linear infinite;
+}
+
+.news-item {
+    margin-right: 50px;
+    display: inline-block;
+}
+
+    .news-item a {
+        color: #fff;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+@keyframes scroll-left {
+    0% {
+        transform: translateX(100%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}

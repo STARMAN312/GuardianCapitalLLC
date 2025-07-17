@@ -15,7 +15,7 @@
 						</div>
 					</div>
 			}
-			<form asp-action="Edit">
+			<form asp-action="Edit" enctype="multipart/form-data">
 				<input type="hidden" asp-for="Id" />
 				<div>
 					<div class="form-group">
@@ -35,16 +35,32 @@
 						<input asp-for="WorkEmail" type="text" class="form-control">
 					</div>
 					<div class="form-group">
-						<label for="InputPassword" class="form-label" id="passwordLabel">Personal Email</label>
+						<label class="form-label">Personal Email</label>
 						<input asp-for="PersonalEmail" type="text" class="form-control">
 					</div>
 					<div class="form-group">
-						<label for="InputPassword" class="form-label" id="passwordLabel">Work Phone</label>
+						<label class="form-label">Work Phone</label>
 						<input asp-for="WorkPhone" type="text" class="form-control">
 					</div>
 					<div class="form-group">
-						<label for="InputPassword" class="form-label" id="passwordLabel">Personal Phone</label>
+						<label class="form-label">Personal Phone</label>
 						<input asp-for="PersonalPhone" type="text" class="form-control">
+					</div>
+					@if (Model.ExistingFiles?.Any() == true)
+					{
+						<h4>Uploaded Files</h4>
+						<ul>
+							@foreach (var file in Model.ExistingFiles)
+							{
+								<li>
+									@file.FileName
+								</li>
+							}
+						</ul>
+					}
+					<div class="form-group">
+						<label class="form-label">Personal Phone</label>
+						<input type="file" asp-for="Files" multiple />
 					</div>
 				</div>
 				<div class="form-group mb-0 mt-3 justify-content-end">

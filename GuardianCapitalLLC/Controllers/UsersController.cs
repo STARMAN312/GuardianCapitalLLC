@@ -1,18 +1,21 @@
 ﻿using GuardianCapitalLLC.Data;
+using GuardianCapitalLLC.Migrations;
 using GuardianCapitalLLC.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace GuardianCapitalLLC.Controllers
 {
-    public class UsersController(UserManager<ApplicationUser> userManager, ApplicationDbContext context) : Controller
+    public class UsersController(UserManager<ApplicationUser> userManager, ApplicationDbContext context, IWebHostEnvironment env) : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly ApplicationDbContext _context = context;
+        private readonly IWebHostEnvironment _env = env;
 
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
@@ -41,6 +44,10 @@ namespace GuardianCapitalLLC.Controllers
             if (user == null)
                 return NotFound();
 
+            List<UserFile> userFiles = await _context.UserFiles
+                .Where(f => f.UserId == id)
+                .ToListAsync();
+
             EditUserVM editUser = new EditUserVM
             {
                 Id = user.Id,
@@ -50,7 +57,8 @@ namespace GuardianCapitalLLC.Controllers
                 WorkEmail = user.WorkEmail!,
                 PersonalEmail = user.PersonalEmail!,
                 WorkPhone = user.WorkPhone!,
-                PersonalPhone = user.PersonalPhone!
+                PersonalPhone = user.PersonalPhone!,
+                ExistingFiles = userFiles,
             };
 
             return View(editUser);
@@ -77,6 +85,10 @@ namespace GuardianCapitalLLC.Controllers
                 .OrderByDescending(t => t.Date)
                 .ToList();
 
+            List<UserFile> files = await _context.UserFiles
+                .Where(f => f.UserId == user.Id)
+                .ToListAsync();
+
             UserViewVM viewModel = new UserViewVM
             {
                 Id = user.Id,
@@ -87,10 +99,52 @@ namespace GuardianCapitalLLC.Controllers
                 WorkPhone = user.WorkPhone!,
                 PersonalPhone = user.PersonalPhone!,
                 BankAccounts = user.BankAccounts!,
-                Transactions = allTransactions
+                Transactions = allTransactions,
+                Files = files,
             };
 
             return View(viewModel);
+        }
+
+        [HttpGet]
+        public IActionResult Download(int id)
+        {
+            var file = _context.UserFiles.FirstOrDefault(f => f.Id == id);
+            if (file == null)
+                return NotFound();
+
+            var filePath = Path.Combine(_env.ContentRootPath, file.FilePath);
+            if (!System.IO.File.Exists(filePath))
+                return NotFound();
+
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(filePath, out var contentType))
+            {
+                contentType = "application/octet-stream";
+            }
+
+            return PhysicalFile(filePath, contentType, Path.GetFileName(file.FileName));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public IActionResult DeleteFile(int Id, string UserId)
+        {
+            var file = _context.UserFiles.FirstOrDefault(f => f.Id == Id);
+            if (file == null)
+                return NotFound();
+
+            var filePath = Path.Combine(_env.ContentRootPath, file.FilePath);
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
+
+            _context.UserFiles.Remove(file);
+            _context.SaveChanges();
+
+            return RedirectToAction("Details", new { id = UserId });
         }
 
         [Authorize(Roles = "Admin")]
@@ -191,6 +245,35 @@ namespace GuardianCapitalLLC.Controllers
                 existingUser.PersonalEmail = User.PersonalEmail;
                 existingUser.WorkPhone = User.WorkPhone;
                 existingUser.PersonalPhone = User.PersonalPhone;
+
+                if (User.Files != null && User.Files.Any())
+                {
+                    var uploadsPath = Path.Combine(_env.ContentRootPath, "App_Data", "Uploads");
+                    Directory.CreateDirectory(uploadsPath);
+
+                    foreach (var file in User.Files)
+                    {
+                        var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+                        var filePath = Path.Combine(uploadsPath, fileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        var userFile = new UserFile
+                        {
+                            FileName = file.FileName,
+                            FilePath = "App_Data/Uploads/" + fileName,
+                            ContentType = file.ContentType,
+                            UserId = User.Id
+                        };
+
+                        _context.UserFiles.Add(userFile);
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
 
                 IdentityResult result = await _userManager.UpdateAsync(existingUser);
 

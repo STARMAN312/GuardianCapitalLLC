@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using GuardianCapitalLLC.Migrations;
+using System.ComponentModel.DataAnnotations;
 
 namespace GuardianCapitalLLC.Models
 {
@@ -56,6 +57,8 @@ namespace GuardianCapitalLLC.Models
         public string WorkPhone { get; set; }
         [Required]
         public string PersonalPhone { get; set; }
+        public List<IFormFile>? Files { get; set; }
+        public List<UserFile>? ExistingFiles { get; set; }
     }
 
     public class EditAdminVM
@@ -91,6 +94,7 @@ namespace GuardianCapitalLLC.Models
         public string PersonalPhone { get; set; }
         public virtual ICollection<BankAccount> BankAccounts { get; set; }
         public virtual ICollection<TransactionVM> Transactions { get; set; }
+        public List<UserFile> Files { get; set; }
     }
 
     public class AdminViewVM
@@ -107,6 +111,8 @@ namespace GuardianCapitalLLC.Models
         public decimal TotalBalance { get; set; }
         public virtual ICollection<BankAccount> BankAccounts { get; set; }
         public virtual ICollection<TransactionVM> Transactions { get; set; }
+        public Dictionary<string, decimal>? ConvertedBalances { get; set; }
+        public Dictionary<string, List<MarketQuoteVM>>? MarketData { get; set; }
     }
 
     public class BankAccountsView
@@ -172,5 +178,45 @@ namespace GuardianCapitalLLC.Models
         public int TransactionsAllTime { get; set; }
         public int TransfersToday { get; set; }
         public int FailedLoginsLast24Hours { get; set; }
+        public Dictionary<string, decimal>? ConvertedBalances { get; set; }
+        public Dictionary<string, List<MarketQuoteVM>>? MarketData { get; set; }
+
     }
+
+    public class ExchangeRatesResponse
+    {
+        public string Base { get; set; } = string.Empty;
+        public DateTime Date { get; set; }
+        public Dictionary<string, decimal> Rates { get; set; } = new();
+    }
+
+    public class StockQuote
+    {
+        public string Symbol { get; set; }
+        public decimal Price { get; set; }
+        public decimal Change { get; set; }
+        public decimal ChangePercent { get; set; }
+        public string LastTradingDay { get; set; }
+    }
+
+    public class MarketQuoteVM
+    {
+        public string Symbol { get; set; } = default!;
+        public decimal? Current { get; set; }
+        public decimal? High { get; set; }
+        public decimal? Low { get; set; }
+        public decimal? Open { get; set; }
+        public decimal? PreviousClose { get; set; }
+        public decimal? Change => Current.HasValue && PreviousClose.HasValue
+            ? Current.Value - PreviousClose.Value
+            : null;
+        public decimal? ChangePercent => (Change.HasValue && PreviousClose.HasValue && PreviousClose != 0)
+            ? Math.Round(Change.Value / PreviousClose.Value * 100, 2)
+            : null;
+
+        public string? CompanyName { get; set; }
+        public string? LogoUrl { get; set; }
+
+    }
+
 }

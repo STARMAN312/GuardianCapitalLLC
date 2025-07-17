@@ -1,7 +1,8 @@
 ﻿@model AdminDashboardVM
 @{
-    ViewData["Title"] = "Home Page";
+	ViewData["Title"] = "Home Page";
 }
+
 <div class="col-xl-12 col-lg-12 col-md-12 col-xs-12 mt-2">
 	<div class="card p-2">
 		<div class="card-body">
@@ -17,6 +18,35 @@
 </div>
 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 px-0 mt-2">
 	<div class="card px-3 ps-4">
+		<div class="d-flex flex-row justify-content-center mg-b-20  border p-3 br-5 align-items-center mt-2">
+			<div class="mx-2 d-inline-block">
+				<span class="tx-18 text-dark">Currency: </span>
+			</div>
+			@foreach (var rate in Model.ConvertedBalances)
+			{
+				Dictionary<string, string> currencySymbols = new Dictionary<string, string>
+				{
+					{ "USD", "$" },
+					{ "CAD", "$" },
+					{ "EUR", "€" },
+					{ "GBP", "£" },
+					{ "JPY", "¥" },
+					{ "MXN", "$" },
+					{ "KWD", "د.ك" }
+				};
+
+				// Assign class based on currency key (USD gets 'btn-info' by default)
+				string btnClass = rate.Key == "USD" ? "btn btn-info currency-btn" : "btn btn-outline-info currency-btn";
+
+				<div class="mx-2 d-inline-block">
+					<button class="@btnClass"
+					data-currency="@rate.Key"
+					data-value="@rate.Value">
+						<span class="me-1">@currencySymbols[rate.Key]</span> @rate.Key
+					</button>
+				</div>
+			}
+		</div>
 		<div class="row index1">
 			<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
 				<div class="row border-end bd-xs-e-0 p-3">
@@ -53,8 +83,8 @@
 							</div>
 							<div class="pb-0 mt-0">
 								<div class="d-flex">
-									<h4 class="tx-18 font-weight-semibold mb-0">
-										$@Model.TotalBalance.ToString("N2")
+									<h4 id="convertedBalance" class="tx-18 font-weight-semibold mb-0">
+										$@Model.TotalBalance.ToString("N2") USD
 									</h4>
 								</div>
 							</div>
@@ -149,3 +179,221 @@
 		</div>
 	</div>
 </div>
+@if (Model.MarketData != null)
+{
+	<div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 mg-md-t-0">
+		<div class="card bg-gray-200 bd-0">
+			<div class="card-body">
+				<h5 class="card-title tx-dark tx-medium mg-b-10">Market Overview</h5>
+				@foreach (var category in Model.MarketData)
+				{
+					<h4 class="mt-4">@category.Key</h4>
+					<div aria-multiselectable="true" class="accordion" id="accordion-@category.Key" role="tablist">
+						@{
+							var i = 0;
+						}
+						@foreach (var item in category.Value)
+						{
+							var percent = item.ChangePercent ?? 0;
+							var isPositive = percent >= 0;
+							var arrowIcon = isPositive ? "fe-trending-up" : "fe-trending-down";
+							var colorClass = isPositive ? "text-success" : "text-danger";
+							var collapseId = $"collapse-{category.Key}-{i}";
+							var headingId = $"heading-{category.Key}-{i}";
+							<div class="card mb-0">
+								<div class="card-header" id="@headingId" role="tab">
+									<a class="accordion-toggle collapsed"
+									   data-bs-toggle="collapse"
+									   data-bs-parent="#accordion11"
+									   href="#@collapseId"
+									   aria-expanded="false"
+									   aria-controls="@collapseId">
+										<div class="d-flex align-items-center item my-2">
+											<div class="d-flex">
+												@if (!string.IsNullOrEmpty(item.LogoUrl))
+												{
+													<img src="@item.LogoUrl"
+														 alt="@item.Symbol"
+														 class="rounded-circle mx-2 ht-30 wd-30 me-2" />
+												}
+												else
+												{
+													<div class="avatar bg-info rounded-circle align-items-center justify-content-center mx-2">
+														@item.Symbol?[0]
+													</div>
+												}
+												<div class="">
+													<h6 class="">@item.Symbol</h6>
+													<span class="text-muted tx-12">@item.CompanyName</span>
+												</div>
+											</div>
+											<div class="ms-auto my-auto">
+												<div class="d-flex">
+													<span class="me-4 mt-1 font-weight-semibold tx-16 market-price" data-usd="@item.Current">@item.Current?.ToString("N2")</span>
+													<span class="@colorClass fs-13 my-auto">
+														<i class="fe @arrowIcon @colorClass mx-2 my-auto"></i>
+														@percent.ToString("N2")%
+													</span>
+												</div>
+											</div>
+										</div>
+									</a>
+								</div>
+								<div id="@collapseId"
+									 class="collapse"
+									 role="tabpanel"
+									 aria-labelledby="@headingId"
+									 data-bs-parent="#accordion11">
+									<div class="card-body panel-body">
+										<div class="row index1">
+											<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
+												<div class="row border-end bd-xs-e-0 p-3">
+													<div class="col-3 d-flex align-items-center justify-content-center">
+														<div class="circle-icon bg-primary text-center align-self-center overflow-hidden shadow">
+															<i class="fe fe-shopping-bag tx-15 text-white"></i>
+														</div>
+													</div>
+													<div class="col-9 py-0">
+														<div class="pt-4 pb-3">
+															<div class="d-flex">
+																<h6 class="mb-2 tx-12">Change in price</h6>
+															</div>
+															<div class="pb-0 mt-0">
+																<div class="d-flex">
+																	<h4 class="tx-18 font-weight-semibold mb-0 market-price" data-usd="@item.Change">@item.Change?.ToString("N2")</h4>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+											<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
+												<div class="row border-end bd-xs-e-0  p-3">
+													<div class="col-3 d-flex align-items-center justify-content-center">
+														<div class="circle-icon bg-secondary text-center align-self-center overflow-hidden shadow">
+															<i class="fe fe-external-link tx-15 text-white"></i>
+														</div>
+													</div>
+													<div class="col-9">
+														<div class="pt-4 pb-3">
+															<div class="d-flex">
+																<h6 class="mb-2 tx-12">Daily High</h6>
+															</div>
+															<div class="pb-0 mt-0">
+																<div class="d-flex">
+																	<h4 class="tx-18 font-weight-semibold mb-0 market-price" data-usd="@item.High">@item.High?.ToString("N2")</h4>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+											<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
+												<div class="row  p-3">
+													<div class="col-3 d-flex align-items-center justify-content-center">
+														<div class="circle-icon bg-info text-center align-self-center overflow-hidden shadow">
+															<i class="fe fe-credit-card tx-15 text-white"></i>
+														</div>
+													</div>
+													<div class="col-9">
+														<div class="pt-4 pb-3">
+															<div class="d-flex	">
+																<h6 class="mb-2 tx-12">Daily Low</h6>
+															</div>
+															<div class="pb-0 mt-0">
+																<div class="d-flex">
+																	<h4 class="tx-18 font-weight-semibold mb-0 market-price" data-usd="@item.Low">@item.Low?.ToString("N2")</h4>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							i++;
+						}
+					</div>
+				}
+			</div>
+		</div>
+	</div>
+}
+
+<script>
+	const exchangeRates = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ConvertedBalances));
+	let selectedCurrency = localStorage.getItem('selectedCurrency') || 'USD';
+
+	const currencySymbols = {
+		USD: "$",
+		CAD: "$",
+		EUR: "€",
+		GBP: "£",
+		JPY: "¥",
+		MXN: "$",
+		KWD: "د.ك"
+	};
+
+	function formatPrice(value, currency) {
+		const symbol = currencySymbols[currency] || '';
+		return symbol + value.toLocaleString(undefined, { minimumFractionDigits: 2 }) + " " + currency;
+	}
+
+	function convertPrice(priceInUsd, currency) {
+		if (!exchangeRates[currency]) return priceInUsd;
+		return priceInUsd * exchangeRates[currency] / exchangeRates["USD"];
+	}
+
+	function updateMarketPrices(currency) {
+		document.querySelectorAll('.market-price').forEach(td => {
+			const priceUsd = parseFloat(td.getAttribute('data-usd'));
+			if (!isNaN(priceUsd)) {
+				const converted = convertPrice(priceUsd, currency);
+				td.textContent = formatPrice(converted, currency);
+			}
+		});
+	}
+
+	function setCurrencyDisplay(currency, value) {
+		const display = document.getElementById('convertedBalance');
+		const symbol = currencySymbols[currency] ?? '';
+		display.textContent = `${symbol}${value.toLocaleString(undefined, { minimumFractionDigits: 2 })} ${currency}`;
+
+		// Reset all buttons to outline style
+		document.querySelectorAll('.currency-btn').forEach(btn => {
+			btn.classList.remove('btn-info');
+			btn.classList.add('btn-outline-info');
+		});
+
+		// Set the selected button to solid style
+		const selectedBtn = document.querySelector(`.currency-btn[data-currency="${currency}"]`);
+		if (selectedBtn) {
+			selectedBtn.classList.remove('btn-outline-info');
+			selectedBtn.classList.add('btn-info');
+		}
+
+		updateMarketPrices(currency);
+	}
+
+	document.querySelectorAll('.currency-btn').forEach(button => {
+		button.addEventListener('click', function () {
+			const currency = this.getAttribute('data-currency');
+			const value = parseFloat(this.getAttribute('data-value'));
+
+			setCurrencyDisplay(currency, value);
+
+			localStorage.setItem('selectedCurrency', currency);
+		});
+	});
+
+	window.addEventListener('DOMContentLoaded', () => {
+		const savedCurrency = localStorage.getItem('selectedCurrency') || "USD";
+		const savedButton = document.querySelector(`.currency-btn[data-currency="${savedCurrency}"]`);
+		if (savedButton) {
+			const value = parseFloat(savedButton.getAttribute('data-value'));
+			setCurrencyDisplay(savedCurrency, value);
+		}
+	});
+</script>

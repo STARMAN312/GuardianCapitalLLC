@@ -1,5 +1,6 @@
 ﻿using GuardianCapitalLLC.Data;
 using GuardianCapitalLLC.Models;
+using GuardianCapitalLLC.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,13 +11,14 @@ using System.Text.RegularExpressions;
 
 namespace GuardianCapitalLLC.Controllers
 {
-    public class AccountController(SignInManager<ApplicationUser> signInManager, ApplicationDbContext context, ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager) : Controller
+    public class AccountController(SignInManager<ApplicationUser> signInManager, ApplicationDbContext context, ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, MarketDataService marketDataService) : Controller
     {
         private readonly ApplicationDbContext _context = context;
         private readonly ILogger<HomeController> _logger = logger;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
         private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
+        private readonly MarketDataService _marketDataService = marketDataService;
 
         [Authorize(Roles = "Client")]
         public async Task<IActionResult> Index()
@@ -45,12 +47,50 @@ namespace GuardianCapitalLLC.Controllers
                 .OrderByDescending(t => t.Date)
                 .ToList();
 
+            decimal totalBalance = user.BankAccounts!.Sum(a => a.Balance);
+
+            var httpClient = new HttpClient();
+            string url = $"https://api.exchangerate-api.com/v4/latest/USD";
+
+            ExchangeRatesResponse? ratesResponse = null;
+            try
+            {
+                ratesResponse = await httpClient.GetFromJsonAsync<ExchangeRatesResponse>(url);
+            }
+            catch
+            {
+                return NotFound();
+            }
+
+            Dictionary<string, decimal> convertedBalances = new Dictionary<string, decimal>();
+
+            if (ratesResponse != null)
+            {
+                string[] targetCurrencies = new[] { "USD", "CAD", "EUR", "MXN", "GBP", "JPY", "KWD" };
+
+                foreach (string currency in targetCurrencies)
+                {
+                    if (currency == "USD")
+                    {
+                        convertedBalances["USD"] = Math.Round(totalBalance, 2);
+                    }
+                    else if (ratesResponse.Rates.TryGetValue(currency, out var rate))
+                    {
+                        convertedBalances[currency] = Math.Round(totalBalance * rate, 2);
+                    }
+                }
+            }
+
+            var marketData = await _marketDataService.GetMarketDataAsync();
+
             AccountViewVM userView = new AccountViewVM
             {
                 FullName = user.FullName!,
-                TotalBalance = user.BankAccounts!.Sum(a => a.Balance),
+                TotalBalance = totalBalance,
                 BankAccounts = user.BankAccounts!,
-                Transactions = allTransactions
+                Transactions = allTransactions,
+                ConvertedBalances = convertedBalances,
+                MarketData = marketData,
             };
 
             return View(userView);
