@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace GuardianCapitalLLC.Controllers
@@ -337,38 +338,43 @@ namespace GuardianCapitalLLC.Controllers
         [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> GenerateNewPassword(string Id)
+        public async Task<IActionResult> GenerateNewPassword(string id, string? customPassword)
         {
-            ApplicationUser? user = await _userManager.FindByIdAsync(Id);
+            ApplicationUser? user = await _userManager.FindByIdAsync(id);
 
             if (user == null)
                 return NotFound();
 
-            byte[] bytes = new byte[2];
-            using (var rng = RandomNumberGenerator.Create())
+            string newPassword;
+
+            if (!string.IsNullOrWhiteSpace(customPassword))
             {
-                rng.GetBytes(bytes);
+                newPassword = customPassword;
+            }
+            else
+            {
+                // Generate a secure 10-character alphanumeric password
+                const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$";
+                using var rng = RandomNumberGenerator.Create();
+                var buffer = new byte[10];
+                rng.GetBytes(buffer);
+                newPassword = new string(buffer.Select(b => chars[b % chars.Length]).ToArray());
             }
 
-            int pin = BitConverter.ToUInt16(bytes, 0) % 10000;
-            string newPassword = pin.ToString("D4");
-
             string resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
-
             IdentityResult result = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
 
             if (!result.Succeeded)
-            {
                 return BadRequest(result.Errors);
-            }
 
             TempData["Username"] = user.UserName;
-            TempData["PIN"] = newPassword;
-
-            TempData["NotificationMessage"] = "New PIN generated successfully!";
+            TempData["PIN"] = newPassword; // You may want to rename this key
+            TempData["NotificationMessage"] = "New password set successfully!";
 
             return RedirectToAction("Details", new { id = user.Id });
         }
+
+
 
         [Authorize(Roles = "Admin")]
         public IActionResult UpdateBalance(string id)

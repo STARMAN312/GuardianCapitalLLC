@@ -64,11 +64,15 @@
 						</div>
 					</div>
 				</div>
-				<div class="mt-5">
+				<div class="mt-5 d-flex flex-row justify-content-between">
 					<a asp-controller="BankAccount" asp-action="Index" asp-route-id="@Model.Id" class="btn btn-info">Manage Bank Accounts</a>
+
 					<form asp-controller="Users" asp-action="GenerateNewPassword" asp-route-id="@Model.Id" method="post" class="d-inline">
 						@Html.AntiForgeryToken()
-						<button type="submit" class="btn btn-warning">Generate New PIN</button>
+
+						<input type="text" name="customPassword" class="form-control d-inline w-auto me-2" placeholder="Optional custom password" />
+
+						<button type="submit" class="btn btn-warning">Generate New Password</button>
 					</form>
 				</div>
 				@if (Model.Files != null && Model.Files.Any())
