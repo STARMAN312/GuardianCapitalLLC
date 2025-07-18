@@ -50,7 +50,7 @@ namespace GuardianCapitalLLC.Controllers
             decimal totalBalance = user.BankAccounts!.Sum(a => a.Balance);
 
             var httpClient = new HttpClient();
-            string url = $"https://api.exchangerate-api.com/v4/latest/USD";
+            string url = $"https://v6.exchangerate-api.com/v6/6073365552367ccd1f4f7fa8/latest/USD";
 
             ExchangeRatesResponse? ratesResponse = null;
             try
@@ -62,24 +62,7 @@ namespace GuardianCapitalLLC.Controllers
                 return NotFound();
             }
 
-            Dictionary<string, decimal> convertedBalances = new Dictionary<string, decimal>();
-
-            if (ratesResponse != null)
-            {
-                string[] targetCurrencies = new[] { "USD", "CAD", "EUR", "MXN", "GBP", "JPY", "KWD" };
-
-                foreach (string currency in targetCurrencies)
-                {
-                    if (currency == "USD")
-                    {
-                        convertedBalances["USD"] = Math.Round(totalBalance, 2);
-                    }
-                    else if (ratesResponse.Rates.TryGetValue(currency, out var rate))
-                    {
-                        convertedBalances[currency] = Math.Round(totalBalance * rate, 2);
-                    }
-                }
-            }
+            Dictionary<string, decimal> convertedBalances = await _marketDataService.GetConvertedBalancesAsync(totalBalance);
 
             var marketData = await _marketDataService.GetMarketDataAsync();
 
@@ -99,6 +82,7 @@ namespace GuardianCapitalLLC.Controllers
         [Authorize(Roles = "Client")]
         public async Task<IActionResult> TransferFundsToInternalAccount()
         {
+
             ViewBag.HideBanner = true;
 
             ApplicationUser? currentUser = await _userManager.GetUserAsync(User);
@@ -110,9 +94,14 @@ namespace GuardianCapitalLLC.Controllers
                 .Include(u => u.BankAccounts)
                 .FirstOrDefaultAsync(u => u.Id == currentUser.Id);
 
+            decimal totalBalance = user!.BankAccounts!.Sum(a => a.Balance);
+
+            Dictionary<string, decimal> convertedBalance = await _marketDataService.GetConvertedBalancesAsync(totalBalance);
+
             InternalTransferFundsVM transferFundsVM = new InternalTransferFundsVM
             {
-                BankAccounts = user!.BankAccounts
+                BankAccounts = user!.BankAccounts,
+                ConvertedBalances = convertedBalance,
             };
 
             ViewBag.HideBanner = true;
@@ -147,6 +136,7 @@ namespace GuardianCapitalLLC.Controllers
             }
 
             ViewBag.HideBanner = true;
+
 
             model.FromAccount = bankAccounts.FirstOrDefault(a => a.Id == model.FromAccountId);
             model.ToAccount = bankAccounts.FirstOrDefault(a => a.Id == model.ToAccountId);

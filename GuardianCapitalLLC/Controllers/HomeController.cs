@@ -66,24 +66,7 @@ public class HomeController(ApplicationDbContext context, UserManager<Applicatio
             return NotFound();
         }
 
-        Dictionary<string, decimal> convertedBalances = new Dictionary<string, decimal>();
-
-        if (ratesResponse != null)
-        {
-            string[] targetCurrencies = new[] { "USD", "CAD", "EUR", "MXN", "GBP", "JPY", "KWD" };
-
-            foreach (string currency in targetCurrencies)
-            {
-                if (currency == "USD")
-                {
-                    convertedBalances["USD"] = Math.Round(totalBalance, 2);
-                }
-                else if (ratesResponse.Rates.TryGetValue(currency, out var rate))
-                {
-                    convertedBalances[currency] = Math.Round(totalBalance * rate, 2);
-                }
-            }
-        }
+        Dictionary<string, decimal> convertedBalances = await _marketDataService.GetConvertedBalancesAsync(totalBalance);
 
         var marketData = await _marketDataService.GetMarketDataAsync();
 

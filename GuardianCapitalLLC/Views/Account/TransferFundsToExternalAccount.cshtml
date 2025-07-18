@@ -1,5 +1,6 @@
 ﻿@model ExternalTransferFundsVM
 @using System.Text.RegularExpressions
+@using System.Globalization
 
 @{
 	Layout = "_ClientLayout";
@@ -38,7 +39,10 @@
 						<option disabled selected value="">-- Select source account --</option>
 						@foreach (var acc in Model.BankAccounts)
 						{
-							<option value="@acc.Id">@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1") - $@acc.Balance.ToString("N2")</option>
+							<option value="@acc.Id" data-usd="@acc.Balance.ToString(CultureInfo.InvariantCulture)" class="market-price">
+								@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1")
+								- <span class="balance-text">$@acc.Balance.ToString("N2") USD</span>
+							</option>
 						}
 					</select>
 				</div>
@@ -59,7 +63,7 @@
 					<label>Amount</label>
 					<div class="input-group mb-3">
 						<span class="input-group-text bg-info-transparent text-info" id="basic-addon1">$</span>
-						<input type="text" id="AmountInput" name="Amount" class="form-control" placeholder="0.00" />
+						<input type="text" id="AmountInput" class="form-control" placeholder="0.00" />
 					</div>
 				</div>
 				<div class="form-group mt-2">
@@ -101,9 +105,8 @@
 
 		// Save cursor position before formatting
 		let selectionStart = input.selectionStart;
-		let selectionEnd = input.selectionEnd;
 
-		// Count commas before formatting to calculate position change later
+		// Count commas before formatting
 		const commasBefore = (value.slice(0, selectionStart).match(/,/g) || []).length;
 
 		// Remove all except digits and dot
@@ -115,7 +118,6 @@
 			value = parts.shift() + '.' + parts.join('');
 		}
 
-		// Check if ends with a dot (to preserve)
 		const endsWithDot = value.endsWith('.');
 
 		// Split integer and decimal parts
@@ -139,24 +141,80 @@
 		// Set the formatted value
 		input.value = formattedValue;
 
-		// Count commas after formatting (before cursor)
+		// Count commas after formatting
 		const commasAfter = (formattedValue.slice(0, selectionStart).match(/,/g) || []).length;
 
-		// Calculate the new cursor position based on commas added/removed
 		const commaDifference = commasAfter - commasBefore;
 		let newPos = selectionStart + commaDifference;
 
-		// Handle edge cases where cursor is after the dot
 		if (endsWithDot && newPos === formattedValue.length - 1) {
 			newPos = formattedValue.length;
 		}
 
-		// Set cursor position
 		input.setSelectionRange(newPos, newPos);
 
-		// Update hidden input with raw value (no commas)
-		document.getElementById('Amount').value = decimalPart || endsWithDot
-			? intPart + '.' + decimalPart
-			: intPart;
+		// Now parse the raw number entered (in selected currency)
+		const rawAmount = parseFloat(intPart + (decimalPart ? '.' + decimalPart : ''));
+
+		// Get exchange rates and selected currency from localStorage
+		const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
+		const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
+
+		// Convert rawAmount back to USD
+		// USD amount = rawAmount * (USD rate) / (selectedCurrency rate)
+		// But in your stored data, seems like exchangeRates[currency] = rate in that currency relative to USD?
+		// Let's confirm:
+		// Your previous convertPrice function: priceInUsd * exchangeRates[currency] / exchangeRates["USD"]
+		// To convert from selectedCurrency -> USD, formula: amountInCurrency * exchangeRates["USD"] / exchangeRates[selectedCurrency]
+
+		let amountInUsd = rawAmount;
+		if (exchangeRates[selectedCurrency] && exchangeRates["USD"]) {
+			amountInUsd = rawAmount * exchangeRates["USD"] / exchangeRates[selectedCurrency];
+		}
+
+		// Set hidden input with converted amount in USD, fixed to 2 decimals
+		document.getElementById('Amount').value = amountInUsd.toFixed(2);
 	});
+
+	document.addEventListener("DOMContentLoaded", function () {
+		const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
+		const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
+
+		const currencySymbols = {
+			USD: "$", CAD: "$", EUR: "€", GBP: "£",
+			JPY: "¥", MXN: "$", KWD: "د.ك"
+		};
+
+		function formatPrice(value, currency) {
+			const symbol = currencySymbols[currency] || '';
+			return symbol + value.toLocaleString(undefined, { minimumFractionDigits: 2 }) + " " + currency;
+		}
+
+		function convertPrice(priceInUsd, currency) {
+			if (!exchangeRates[currency] || !exchangeRates["USD"]) return priceInUsd;
+			return priceInUsd * exchangeRates[currency] / exchangeRates["USD"];
+		}
+
+		// Convert all price elements
+		document.querySelectorAll('.market-price').forEach(option => {
+			const balanceSpan = option.querySelector('.balance-text');
+			if (!balanceSpan) return;
+
+			const priceUsd = parseFloat(option.getAttribute('data-usd'));
+			if (isNaN(priceUsd)) return;
+
+			const converted = convertPrice(priceUsd, selectedCurrency);
+			const formatted = formatPrice(converted, selectedCurrency);
+
+			balanceSpan.textContent = formatted;
+		});
+
+		// Update balance display
+		const balanceEl = document.getElementById("convertedBalance");
+		if (balanceEl) {
+			const value = parseFloat(balanceEl.getAttribute("data-value")) || 0;
+			balanceEl.textContent = formatPrice(value, selectedCurrency);
+		}
+	});
+
 </script>

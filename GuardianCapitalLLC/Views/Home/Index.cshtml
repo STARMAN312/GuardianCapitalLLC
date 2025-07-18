@@ -18,34 +18,36 @@
 </div>
 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 px-0 mt-2">
 	<div class="card px-3 ps-4">
-		<div class="d-flex flex-row justify-content-center mg-b-20  border p-3 br-5 align-items-center mt-2">
-			<div class="mx-2 d-inline-block">
-				<span class="tx-18 text-dark">Currency: </span>
-			</div>
-			@foreach (var rate in Model.ConvertedBalances)
-			{
-				Dictionary<string, string> currencySymbols = new Dictionary<string, string>
+		<div class="col-xl-12 col-lg-12 col-md-12 col-sm-6">
+			<div class="d-flex flex-wrap justify-content-center gap-2 border p-3 br-5 align-items-center mt-2">
+				<div class="mx-2 d-inline-block">
+					<span class="tx-18 text-dark">Currency: </span>
+				</div>
+				@foreach (var rate in Model.ConvertedBalances)
 				{
-					{ "USD", "$" },
-					{ "CAD", "$" },
-					{ "EUR", "€" },
-					{ "GBP", "£" },
-					{ "JPY", "¥" },
-					{ "MXN", "$" },
-					{ "KWD", "د.ك" }
+					Dictionary<string, string> currencySymbols = new Dictionary<string, string>
+				{
+				{ "USD", "$" },
+				{ "CAD", "$" },
+				{ "EUR", "€" },
+				{ "GBP", "£" },
+				{ "JPY", "¥" },
+				{ "MXN", "$" },
+				{ "KWD", "د.ك" }
 				};
 
-				// Assign class based on currency key (USD gets 'btn-info' by default)
-				string btnClass = rate.Key == "USD" ? "btn btn-info currency-btn" : "btn btn-outline-info currency-btn";
+					// Assign class based on currency key (USD gets 'btn-info' by default)
+					string btnClass = rate.Key == "USD" ? "btn btn-info currency-btn" : "btn btn-outline-info currency-btn";
 
-				<div class="mx-2 d-inline-block">
-					<button class="@btnClass"
-					data-currency="@rate.Key"
-					data-value="@rate.Value">
-						<span class="me-1">@currencySymbols[rate.Key]</span> @rate.Key
-					</button>
-				</div>
-			}
+					<div class="mx-2 d-inline-block mt-1">
+						<button class="@btnClass"
+								data-currency="@rate.Key"
+								data-value="@rate.Value">
+							<span class="me-1">@currencySymbols[rate.Key]</span> @rate.Key
+						</button>
+					</div>
+				}
+			</div>
 		</div>
 		<div class="row index1">
 			<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">

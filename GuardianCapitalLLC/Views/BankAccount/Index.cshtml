@@ -1,5 +1,6 @@
 ﻿@model BankAccountsView
 @using System.Text.RegularExpressions
+@using System.Globalization
 
 <div class="mt-2">
 	<div class="card bg-gray-200 bd-0">
@@ -14,7 +15,9 @@
 							<div class="ms-auto wd-45p tx-14">
 								<div class="float-end">
 									<h5 class="mb-1 tx-12 font-weight-sembold text-dark">Total Account Balance</h5>
-									<p class="mb-0 tx-20 text-success">$@Model.TotalBalance.ToString("N2")</p>
+									<div class="market-price" data-usd="@Model.TotalBalance.ToString(CultureInfo.InvariantCulture)">
+										<span class="mb-0 tx-20 text-success balance-text">$@Model.TotalBalance.ToString("N2") USD</span>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -64,8 +67,8 @@
 											<h5 class="mb-1 tx-20 font-weight-bold text-dark">@Regex.Replace(BankAccount.Type.ToString(), "(\\B[A-Z])", " $1") Account</h5>
 										</div>
 										<div class="ms-auto wd-45p tx-14">
-											<div class="float-end">
-												<p class="mb-0 tx-20 text-dark">$@BankAccount.Balance.ToString("N2")</p>
+											<div class="float-end market-price" data-usd="@BankAccount.Balance.ToString(CultureInfo.InvariantCulture)">
+												<p class="mb-0 tx-20 text-dark balance-text">$@BankAccount.Balance.ToString("N2") USD</p>
 												<h5 class="mb-1 tx-12 font-weight-sembold text-dark">Available Balance</h5>
 											</div>
 										</div>
@@ -91,7 +94,10 @@
 								<option disabled selected value="">-- Select source account --</option>
 								@foreach (var acc in Model.BankAccounts)
 								{
-									<option value="@acc.Id">@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1") - $@acc.Balance.ToString("N2")</option>
+									<option value="@acc.Id" data-usd="@acc.Balance.ToString(CultureInfo.InvariantCulture)" class="market-price">
+										@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1")
+										- <span class="balance-text">$@acc.Balance.ToString("N2") USD</span>
+									</option>
 								}
 							</select>
 						</div>
@@ -102,7 +108,10 @@
 								<option disabled selected value="">-- Select destination account --</option>
 								@foreach (var acc in Model.BankAccounts)
 								{
-									<option value="@acc.Id">@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1") - $@acc.Balance.ToString("N2")</option>
+									<option value="@acc.Id" data-usd="@acc.Balance.ToString(CultureInfo.InvariantCulture)" class="market-price">
+										@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1")
+										- <span class="balance-text">$@acc.Balance.ToString("N2") USD</span>
+									</option>
 								}
 							</select>
 						</div>
@@ -146,7 +155,10 @@
 								<option disabled selected value="">-- Select account to add balance --</option>
 								@foreach (var acc in Model.BankAccounts)
 								{
-									<option value="@acc.Id">@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1") - $@acc.Balance.ToString("N2")</option>
+									<option value="@acc.Id" data-usd="@acc.Balance.ToString(CultureInfo.InvariantCulture)" class="market-price">
+										@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1")
+										- <span class="balance-text">$@acc.Balance.ToString("N2") USD</span>
+									</option>
 								}
 							</select>
 						</div>
@@ -190,7 +202,10 @@
 								<option disabled selected value="">-- Select account to withdraw balance --</option>
 								@foreach (var acc in Model.BankAccounts)
 								{
-									<option value="@acc.Id">@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1") - $@acc.Balance.ToString("N2")</option>
+									<option value="@acc.Id" data-usd="@acc.Balance.ToString(CultureInfo.InvariantCulture)" class="market-price">
+										@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1")
+										- <span class="balance-text">$@acc.Balance.ToString("N2") USD</span>
+									</option>
 								}
 							</select>
 						</div>
@@ -213,104 +228,110 @@
 		</div>
 	</div>
 </div>
-
 <script>
 
-	document.addEventListener('DOMContentLoaded', function () {
+	const formattedInput = document.getElementById('AmountInput');
+	const hiddenInput = document.getElementById('Amount');
+
 		document.querySelectorAll('.amount-input').forEach(input => {
-			input.addEventListener('input', function (e) {
-				let value = input.value;
+		input.addEventListener('input', function (e) {
+			let value = input.value;
+			const selectionStart = input.selectionStart;
 
-				// Save cursor position
-				let selectionStart = input.selectionStart;
-				const commasBefore = (value.slice(0, selectionStart).match(/,/g) || []).length;
+			// Track commas before formatting
+			const commasBefore = (value.slice(0, selectionStart).match(/,/g) || []).length;
 
-				// Sanitize input
-				value = value.replace(/[^\d.]/g, '');
+			// Sanitize input (keep only numbers and a single dot)
+			value = value.replace(/[^\d.]/g, '');
+			const parts = value.split('.');
+			if (parts.length > 2) {
+				value = parts.shift() + '.' + parts.join('');
+			}
+			const endsWithDot = value.endsWith('.');
 
-				const parts = value.split('.');
-				if (parts.length > 2) {
-					value = parts.shift() + '.' + parts.join('');
-				}
+			const [intPart, decimalPartRaw] = value.split('.');
+			let decimalPart = decimalPartRaw || '';
+			if (decimalPart.length > 2) {
+				decimalPart = decimalPart.substring(0, 2);
+			}
 
-				const endsWithDot = value.endsWith('.');
-				const [intPart, decimalPartRaw] = value.split('.');
-				let decimalPart = decimalPartRaw || '';
+			const intFormatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+			const formattedValue = endsWithDot
+				? `${intFormatted}.`
+				: decimalPart
+				? `${intFormatted}.${decimalPart}`
+				: intFormatted;
 
-				if (decimalPart.length > 2) {
-					decimalPart = decimalPart.substring(0, 2);
-				}
+			input.value = formattedValue;
 
-				const intFormatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-				const formattedValue = endsWithDot
-					? `${intFormatted}.`
-					: decimalPart
-						? `${intFormatted}.${decimalPart}`
-						: intFormatted;
+			// Cursor reposition
+			const commasAfter = (formattedValue.slice(0, selectionStart).match(/,/g) || []).length;
+			const commaDifference = commasAfter - commasBefore;
+			let newPos = selectionStart + commaDifference;
+			if (endsWithDot && newPos === formattedValue.length - 1) {
+				newPos = formattedValue.length;
+			}
+			input.setSelectionRange(newPos, newPos);
 
-				input.value = formattedValue;
+			// Convert to USD using exchangeRates from localStorage
+			const rawAmount = parseFloat(intPart + (decimalPart ? '.' + decimalPart : ''));
 
-				// Fix cursor position
-				const commasAfter = (formattedValue.slice(0, selectionStart).match(/,/g) || []).length;
-				const commaDifference = commasAfter - commasBefore;
-				let newPos = selectionStart + commaDifference;
+			const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
+			const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
 
-				if (endsWithDot && newPos === formattedValue.length - 1) {
-					newPos = formattedValue.length;
-				}
+			let amountInUsd = rawAmount;
+			if (exchangeRates[selectedCurrency] && exchangeRates["USD"]) {
+				amountInUsd = rawAmount * exchangeRates["USD"] / exchangeRates[selectedCurrency];
+			}
 
-				input.setSelectionRange(newPos, newPos);
-
-				// Update corresponding hidden input
-				const hiddenSelector = input.getAttribute('data-hidden');
+			// Set corresponding hidden input
+			const hiddenSelector = input.getAttribute('data-hidden');
+			if (hiddenSelector) {
 				const hiddenInput = document.querySelector(hiddenSelector);
-				if (hiddenInput) {
-					hiddenInput.value = decimalPart || endsWithDot
-						? intPart + '.' + decimalPart
-						: intPart;
-				}
-			});
+				if (hiddenInput) hiddenInput.value = amountInUsd.toFixed(2);
+			}
 		});
 	});
 
-	document.addEventListener('DOMContentLoaded', function () {
-		const fromSelect = document.getElementById('fromAccount');
-		const toSelect = document.getElementById('toAccount');
+	document.addEventListener("DOMContentLoaded", function () {
+		const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
+		const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
 
-		function updateSelectOptions() {
-			const selectedFrom = fromSelect.value;
-			const selectedTo = toSelect.value;
+		const currencySymbols = {
+			USD: "$", CAD: "$", EUR: "€", GBP: "£",
+			JPY: "¥", MXN: "$", KWD: "د.ك"
+		};
 
-			// Enable all options first
-			for (const option of fromSelect.options) {
-				option.disabled = false;
-			}
-			for (const option of toSelect.options) {
-				option.disabled = false;
-			}
-
-			// Disable selected value in the opposite select
-			if (selectedTo) {
-				for (const option of fromSelect.options) {
-					if (option.value === selectedTo) {
-						option.disabled = true;
-					}
-				}
-			}
-
-			if (selectedFrom) {
-				for (const option of toSelect.options) {
-					if (option.value === selectedFrom) {
-						option.disabled = true;
-					}
-				}
-			}
+		function formatPrice(value, currency) {
+			const symbol = currencySymbols[currency] || '';
+			return symbol + value.toLocaleString(undefined, { minimumFractionDigits: 2 }) + " " + currency;
 		}
 
-		fromSelect.addEventListener('change', updateSelectOptions);
-		toSelect.addEventListener('change', updateSelectOptions);
+		function convertPrice(priceInUsd, currency) {
+			if (!exchangeRates[currency] || !exchangeRates["USD"]) return priceInUsd;
+			return priceInUsd * exchangeRates[currency] / exchangeRates["USD"];
+		}
 
-		// Initial update in case defaults are set
-		updateSelectOptions();
+		// Convert all price elements
+		document.querySelectorAll('.market-price').forEach(option => {
+			const balanceSpan = option.querySelector('.balance-text');
+			if (!balanceSpan) return;
+
+			const priceUsd = parseFloat(option.getAttribute('data-usd'));
+			if (isNaN(priceUsd)) return;
+
+			const converted = convertPrice(priceUsd, selectedCurrency);
+			const formatted = formatPrice(converted, selectedCurrency);
+
+			balanceSpan.textContent = formatted;
+		});
+
+		// Update balance display
+		const balanceEl = document.getElementById("convertedBalance");
+		if (balanceEl) {
+			const value = parseFloat(balanceEl.getAttribute("data-value")) || 0;
+			balanceEl.textContent = formatPrice(value, selectedCurrency);
+		}
 	});
+
 </script>

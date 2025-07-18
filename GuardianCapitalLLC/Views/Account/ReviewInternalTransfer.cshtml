@@ -1,5 +1,6 @@
 ﻿@model InternalTransferFundsVM
 @using System.Text.RegularExpressions
+@using System.Globalization
 @{
 	Layout = "_ClientLayout";
 }
@@ -63,7 +64,11 @@
 										</div>
 										<div class="pb-0 mt-0">
 											<div class="d-flex">
-												<h4 class="tx-18 text-success font-weight-semibold mb-0">$@Model.Amount.ToString("N2")</h4>
+												<h4 data-usd="@Model.Amount.ToString(CultureInfo.InvariantCulture)" class="tx-18 text-success font-weight-semibold mb-0 market-price">
+													<span class="balance-text">
+														$@Model.Amount.ToString("N2")
+													</span>
+												</h4>
 											</div>
 										</div>
 									</div>
@@ -94,3 +99,46 @@
 		</div>
 	</div>
 </div>
+
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+		const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
+		const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
+
+		const currencySymbols = {
+			USD: "$", CAD: "$", EUR: "€", GBP: "£",
+			JPY: "¥", MXN: "$", KWD: "د.ك"
+		};
+
+		function formatPrice(value, currency) {
+			const symbol = currencySymbols[currency] || '';
+			return symbol + value.toLocaleString(undefined, { minimumFractionDigits: 2 }) + " " + currency;
+		}
+
+		function convertPrice(priceInUsd, currency) {
+			if (!exchangeRates[currency] || !exchangeRates["USD"]) return priceInUsd;
+			return priceInUsd * exchangeRates[currency] / exchangeRates["USD"];
+		}
+
+		// Convert all price elements
+		document.querySelectorAll('.market-price').forEach(option => {
+			const balanceSpan = option.querySelector('.balance-text');
+			if (!balanceSpan) return;
+
+			const priceUsd = parseFloat(option.getAttribute('data-usd'));
+			if (isNaN(priceUsd)) return;
+
+			const converted = convertPrice(priceUsd, selectedCurrency);
+			const formatted = formatPrice(converted, selectedCurrency);
+
+			balanceSpan.textContent = formatted;
+		});
+
+		// Update balance display
+		const balanceEl = document.getElementById("convertedBalance");
+		if (balanceEl) {
+			const value = parseFloat(balanceEl.getAttribute("data-value")) || 0;
+			balanceEl.textContent = formatPrice(value, selectedCurrency);
+		}
+	});
+</script>

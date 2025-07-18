@@ -125,6 +125,8 @@ namespace GuardianCapitalLLC.Models
 
     public class ExternalTransferFundsVM
     {
+        public Dictionary<string, decimal> ConvertedBalances { get; set; } = [];
+        public string SelectedCurrency { get; set; } = "USD";
         public int AccountId { get; set; }
 
         [Required]
@@ -153,6 +155,8 @@ namespace GuardianCapitalLLC.Models
 
     public class InternalTransferFundsVM
     {
+        public Dictionary<string, decimal>? ConvertedBalances { get; set; }
+        public string SelectedCurrency { get; set; } = "USD";
         [Required]
         public int? FromAccountId { get; set; }
 

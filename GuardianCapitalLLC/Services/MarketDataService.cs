@@ -12,11 +12,13 @@ namespace GuardianCapitalLLC.Services
             return el.ValueKind == JsonValueKind.Number ? el.GetDecimal() : null;
         }
     }
-    public class MarketDataService(IHttpClientFactory httpClientFactory, ILogger<HomeController> logger)
+    public class MarketDataService(IHttpClientFactory httpClientFactory, ILogger<HomeController> logger, HttpClient httpClient)
     {
         private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
         private readonly ILogger<HomeController> _logger = logger;
+        private readonly HttpClient _httpClient = httpClient;
 
+        private readonly string[] _targetCurrencies = new[] { "USD", "CAD", "EUR", "MXN", "GBP", "JPY", "KWD" };
 
         private readonly string _finnhubApiKey = "d1sjoppr01qhe5raavegd1sjoppr01qhe5raavf0";
 
@@ -120,5 +122,43 @@ namespace GuardianCapitalLLC.Services
                 return null;
             }
         }
+
+        public async Task<Dictionary<string, decimal>> GetConvertedBalancesAsync(decimal totalBalanceUsd)
+        {
+            var convertedBalances = new Dictionary<string, decimal>();
+
+            string url = "https://api.exchangerate-api.com/v4/latest/USD";
+
+            ExchangeRatesResponse? ratesResponse = null;
+
+            try
+            {
+                ratesResponse = await _httpClient.GetFromJsonAsync<ExchangeRatesResponse>(url);
+            }
+            catch
+            {
+                // Optionally handle error/logging or fallback logic here
+                return convertedBalances;
+            }
+
+            if (ratesResponse != null)
+            {
+                foreach (var currency in _targetCurrencies)
+                {
+                    if (currency == "USD")
+                    {
+                        convertedBalances["USD"] = Math.Round(totalBalanceUsd, 2);
+                    }
+                    else if (ratesResponse.Rates.TryGetValue(currency, out var rate))
+                    {
+                        convertedBalances[currency] = Math.Round(totalBalanceUsd * rate, 2);
+                    }
+                }
+            }
+
+            return convertedBalances;
+        }
+
     }
+
 }
