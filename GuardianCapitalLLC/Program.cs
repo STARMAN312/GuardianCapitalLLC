@@ -31,6 +31,7 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<MarketDataService>();
 
+builder.Services.AddScoped<MailJetService>();
 
 builder.Services.ConfigureApplicationCookie(options =>
 {

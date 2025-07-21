@@ -12,11 +12,12 @@ using System.Threading.Tasks;
 
 namespace GuardianCapitalLLC.Controllers
 {
-    public class UsersController(UserManager<ApplicationUser> userManager, ApplicationDbContext context, IWebHostEnvironment env) : Controller
+    public class UsersController(UserManager<ApplicationUser> userManager, ApplicationDbContext context, IWebHostEnvironment env, MailJetService mailJetService) : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly ApplicationDbContext _context = context;
         private readonly IWebHostEnvironment _env = env;
+        private readonly MailJetService _mailJetService = mailJetService;
 
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
@@ -371,10 +372,10 @@ namespace GuardianCapitalLLC.Controllers
             TempData["PIN"] = newPassword; // You may want to rename this key
             TempData["NotificationMessage"] = "New password set successfully!";
 
+            await _mailJetService.SendUpdatedCredentials(user.PersonalEmail!, user.UserName!, newPassword);
+
             return RedirectToAction("Details", new { id = user.Id });
         }
-
-
 
         [Authorize(Roles = "Admin")]
         public IActionResult UpdateBalance(string id)
