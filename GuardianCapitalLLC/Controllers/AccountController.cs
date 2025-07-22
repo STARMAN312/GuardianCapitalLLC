@@ -43,11 +43,7 @@ namespace GuardianCapitalLLC.Controllers
             _mailJetService = mailJetService;
         }
 
-        public async Task<string> Token()
-        {
-            return await GetPaypalAccessToken();
-        }
-
+        [Authorize(Roles = "Client")]
         private async Task<string> GetPaypalAccessToken()
         {
             string accessToken = "";
@@ -89,7 +85,7 @@ namespace GuardianCapitalLLC.Controllers
             return accessToken;
         }
 
-
+        [Authorize(Roles = "Client")]
         public async Task<IActionResult> Deposit()
         {
 
@@ -116,6 +112,7 @@ namespace GuardianCapitalLLC.Controllers
             return View(depositView);
         }
 
+        [Authorize(Roles = "Client")]
         [HttpPost]
         public async Task<IActionResult> ProcessDeposit([FromBody] JsonObject Data)
         {
@@ -182,6 +179,7 @@ namespace GuardianCapitalLLC.Controllers
             return new JsonResult(new { Id = "" });
         }
 
+        [Authorize(Roles = "Client")]
         [HttpPost]
         public async Task<IActionResult> ConfirmDeposit([FromBody] JsonObject Data)
         {
