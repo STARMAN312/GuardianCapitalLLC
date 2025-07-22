@@ -25,9 +25,10 @@ namespace GuardianCapitalLLC.Controllers
         private readonly IConfiguration _configuration;
         private readonly string _PaypalClientId; 
         private readonly string _PaypalSecret; 
-        private readonly string _PaypalUrl; 
+        private readonly string _PaypalUrl;
+        private readonly MailJetService _mailJetService;
 
-        public AccountController(SignInManager<ApplicationUser> signInManager, ApplicationDbContext context, ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, MarketDataService marketDataService, IConfiguration configuration)
+        public AccountController(SignInManager<ApplicationUser> signInManager, ApplicationDbContext context, ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, MarketDataService marketDataService, IConfiguration configuration, MailJetService mailJetService)
         {
             _context = context;
             _logger = logger;
@@ -39,10 +40,8 @@ namespace GuardianCapitalLLC.Controllers
             _PaypalClientId = _configuration["PayPalSettings:ClientId"];
             _PaypalSecret = _configuration["PayPalSettings:Secret"];
             _PaypalUrl = _configuration["PayPalSettings:Url"];
+            _mailJetService = mailJetService;
         }
-
-
-
         public async Task<string> Token()
         {
             return await GetPaypalAccessToken();
@@ -268,6 +267,20 @@ namespace GuardianCapitalLLC.Controllers
                                 });
 
                                 await _context.SaveChangesAsync();
+
+                                DateTime utcNow = DateTime.UtcNow;
+
+                                // Convert to Pacific Time
+                                TimeZoneInfo pacificZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+                                DateTime pacificTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, pacificZone);
+
+                                // Determine time zone abbreviation (PST or PDT)
+                                string tzAbbr = pacificZone.IsDaylightSavingTime(pacificTime) ? "PDT" : "PST";
+
+                                // Format the string
+                                string formatted = pacificTime.ToString("MMMM d, yyyy 'at' h:mm tt") + $" {tzAbbr}";
+
+                                await _mailJetService.SendConfirmedDeposit(user.PersonalEmail, depositAmount.ToString(), formatted);
 
                                 return new JsonResult("success");
 
