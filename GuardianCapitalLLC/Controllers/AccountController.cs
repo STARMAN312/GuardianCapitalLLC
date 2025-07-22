@@ -42,6 +42,7 @@ namespace GuardianCapitalLLC.Controllers
             _PaypalUrl = _configuration["PayPalSettings:Url"];
             _mailJetService = mailJetService;
         }
+
         public async Task<string> Token()
         {
             return await GetPaypalAccessToken();
@@ -308,6 +309,11 @@ namespace GuardianCapitalLLC.Controllers
          [Authorize(Roles = "Client")]
         public async Task<IActionResult> Index()
         {
+
+            _logger.LogInformation($"PayPal URL: {url}");
+            _logger.LogInformation($"Client ID is {(string.IsNullOrWhiteSpace(_PaypalClientId) ? "empty" : "present")}");
+            _logger.LogInformation($"Secret is {(string.IsNullOrWhiteSpace(_PaypalSecret) ? "empty" : "present")}");
+
             ApplicationUser? currentUser = await _userManager.GetUserAsync(User);
 
             if (currentUser == null)
