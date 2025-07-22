@@ -12,26 +12,40 @@ namespace GuardianCapitalLLC.Services
             return el.ValueKind == JsonValueKind.Number ? el.GetDecimal() : null;
         }
     }
-    public class MarketDataService(IHttpClientFactory httpClientFactory, ILogger<HomeController> logger, HttpClient httpClient)
+    public class MarketDataService
     {
-        private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
-        private readonly ILogger<HomeController> _logger = logger;
-        private readonly HttpClient _httpClient = httpClient;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ILogger<HomeController> _logger;
+        private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
+        private readonly string _finnhubApiKey;
 
         private readonly string[] _targetCurrencies = new[] { "USD", "CAD", "EUR", "MXN", "GBP", "JPY", "KWD" };
 
-        private readonly string _finnhubApiKey = "d1sjoppr01qhe5raavegd1sjoppr01qhe5raavf0";
-
         private static readonly Dictionary<string, string> FallbackCompanyNames = new()
-    {
-        { "QQQ", "Invesco QQQ Trust (NASDAQ 100 ETF)" },
-        { "SPY", "SPDR S&P 500 ETF Trust" },
-        { "DIA", "SPDR Dow Jones Industrial Average ETF" },
-        { "IWM", "iShares Russell 2000 ETF" },
-        { "USO", "United States Oil Fund" },
-        { "GLD", "SPDR Gold Shares" },
-        { "WEAT", "Teucrium Wheat Fund" }
-    };
+        {
+            { "QQQ", "Invesco QQQ Trust (NASDAQ 100 ETF)" },
+            { "SPY", "SPDR S&P 500 ETF Trust" },
+            { "DIA", "SPDR Dow Jones Industrial Average ETF" },
+            { "IWM", "iShares Russell 2000 ETF" },
+            { "USO", "United States Oil Fund" },
+            { "GLD", "SPDR Gold Shares" },
+            { "WEAT", "Teucrium Wheat Fund" }
+        };
+
+        public MarketDataService(
+            IHttpClientFactory httpClientFactory,
+            ILogger<HomeController> logger,
+            HttpClient httpClient,
+            IConfiguration configuration)
+        {
+            _httpClientFactory = httpClientFactory;
+            _logger = logger;
+            _httpClient = httpClient;
+            _configuration = configuration;
+            _finnhubApiKey = _configuration["Finnhub:ApiKey"] ?? throw new InvalidOperationException("Finnhub API key is missing.");
+        }
+
         public async Task<Dictionary<string, List<MarketQuoteVM>>> GetMarketDataAsync()
         {
             var categories = new Dictionary<string, List<string>>

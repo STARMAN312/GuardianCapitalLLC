@@ -141,7 +141,7 @@
 									<td>@transaction.Date.ToLocalTime().ToString("MM-dd-yyyy HH:mm tt")</td>
 									<td>@Regex.Replace(transaction.AccountName, "(\\B[A-Z])", " $1")</td>
 									<td>@Regex.Replace(transaction.Type.ToString(), "(\\B[A-Z])", " $1")</td>
-									@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal")
+									@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal" || transaction.Type.ToString() == "ServiceFee")
 									{
 										<td class="market-price" data-usd="@transaction.Amount" data-type="debit">-$@transaction.Amount.ToString("N2")</td>
 									}

@@ -6,21 +6,293 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Runtime.ConstrainedExecution;
+using System.Globalization;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace GuardianCapitalLLC.Controllers
 {
-    public class AccountController(SignInManager<ApplicationUser> signInManager, ApplicationDbContext context, ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, MarketDataService marketDataService) : Controller
+    public class AccountController : Controller
     {
-        private readonly ApplicationDbContext _context = context;
-        private readonly ILogger<HomeController> _logger = logger;
-        private readonly UserManager<ApplicationUser> _userManager = userManager;
-        private readonly RoleManager<IdentityRole> _roleManager = roleManager;
-        private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
-        private readonly MarketDataService _marketDataService = marketDataService;
+        private readonly ApplicationDbContext _context;
+        private readonly ILogger<HomeController> _logger;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly MarketDataService _marketDataService;
+        private readonly IConfiguration _configuration;
+        private readonly string _PaypalClientId; 
+        private readonly string _PaypalSecret; 
+        private readonly string _PaypalUrl; 
 
-        [Authorize(Roles = "Client")]
+        public AccountController(SignInManager<ApplicationUser> signInManager, ApplicationDbContext context, ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, MarketDataService marketDataService, IConfiguration configuration)
+        {
+            _context = context;
+            _logger = logger;
+            _userManager = userManager;
+            _roleManager = roleManager;
+            _signInManager = signInManager;
+            _marketDataService = marketDataService;
+            _configuration = configuration;
+            _PaypalClientId = _configuration["PayPalSettings:ClientId"];
+            _PaypalSecret = _configuration["PayPalSettings:Secret"];
+            _PaypalUrl = _configuration["PayPalSettings:Url"];
+        }
+
+
+
+        public async Task<string> Token()
+        {
+            return await GetPaypalAccessToken();
+        }
+
+        private async Task<string> GetPaypalAccessToken()
+        {
+            string accessToken = "";
+            string url = _PaypalUrl + "/v1/oauth2/token"; // Ensure this is fully qualified
+
+            using (var client = new HttpClient())
+            {
+                string credentials64 = Convert.ToBase64String(
+                    Encoding.UTF8.GetBytes(_PaypalClientId + ":" + _PaypalSecret));
+
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Basic", credentials64);
+
+                var requestMessage = new HttpRequestMessage(HttpMethod.Post, url)
+                {
+                    Content = new StringContent(
+                        "grant_type=client_credentials", Encoding.UTF8, "application/x-www-form-urlencoded")
+                };
+
+                var httpResponse = await client.SendAsync(requestMessage);
+
+                if (httpResponse.IsSuccessStatusCode)
+                {
+                    var strResponse = await httpResponse.Content.ReadAsStringAsync();
+                    var jsonResponse = JsonNode.Parse(strResponse);
+
+                    if (jsonResponse != null)
+                    {
+                        accessToken = jsonResponse["access_token"]?.ToString() ?? "";
+                    }
+                }
+                else
+                {
+                    var error = await httpResponse.Content.ReadAsStringAsync();
+                    _logger.LogError($"Failed to get PayPal access token: {error}");
+                }
+            }
+
+            return accessToken;
+        }
+
+
+        public async Task<IActionResult> Deposit()
+        {
+
+            ViewBag.HideBanner = true;
+
+            ApplicationUser? currentUser = await _userManager.GetUserAsync(User);
+
+            if (currentUser == null)
+                return RedirectToAction("Login");
+
+            ApplicationUser? user = await _context.Users
+                .Include(u => u.BankAccounts!)
+                .FirstOrDefaultAsync(u => u.Id == currentUser.Id);
+
+            if (user == null)
+                return RedirectToAction("Login");
+
+            DepositVM depositView = new DepositVM
+            {
+                BankAccounts = user.BankAccounts,
+            };
+
+            ViewBag.PaypalClientId = _PaypalClientId;
+            return View(depositView);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ProcessDeposit([FromBody] JsonObject Data)
+        {
+            var totalAmount = Data?["amount"]?.ToString();
+            var currency = Data?["currency"]?.ToString() ?? "USD"; // Default to USD
+            if (totalAmount == null)
+            {
+                return new JsonResult(new { Id = "" });
+            }
+
+            JsonObject createOrderRequest = new JsonObject
+            {
+                ["intent"] = "CAPTURE"
+            };
+
+            JsonObject amount = new JsonObject
+            {
+                ["currency_code"] = "USD",
+                ["value"] = totalAmount
+            };
+
+            JsonObject purchaseUnit = new JsonObject
+            {
+                ["amount"] = amount
+            };
+
+            JsonArray purchaseUnits = new JsonArray
+            {
+                purchaseUnit
+            };
+
+            createOrderRequest.Add("purchase_units", purchaseUnits);
+
+            string accessToken = await GetPaypalAccessToken();
+            string url = _PaypalUrl + "/v2/checkout/orders";
+
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = new StringContent(createOrderRequest.ToString(), Encoding.UTF8, "application/json")
+            };
+
+            var httpResponse = await client.SendAsync(requestMessage);
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                var strResponse = await httpResponse.Content.ReadAsStringAsync();
+                var jsonResponse = JsonNode.Parse(strResponse);
+
+                if (jsonResponse != null)
+                {
+                    string paypalOrderId = jsonResponse["id"]?.ToString() ?? "";
+                    return new JsonResult(new { Id = paypalOrderId });
+                }
+            }
+            else
+            {
+                var error = await httpResponse.Content.ReadAsStringAsync();
+                _logger.LogError($"PayPal order creation failed: {error}");
+            }
+
+            return new JsonResult(new { Id = "" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ConfirmDeposit([FromBody] JsonObject Data)
+        {
+            var orderId = Data?["orderID"]?.ToString();
+            var accountIdStr = Data?["accountId"]?.ToString();
+
+            if (string.IsNullOrEmpty(accountIdStr) || !int.TryParse(accountIdStr, out int accountId))
+            {
+                return new JsonResult("invalid-account-id");
+            }
+
+            if (orderId == null)
+            {
+                return new JsonResult("error");
+            }
+
+            string accessToken = await GetPaypalAccessToken();
+
+            string url = _PaypalUrl + "/v2/checkout/orders/" + orderId + "/capture";
+
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = new StringContent("", Encoding.UTF8, "application/json")
+            };
+
+            var httpResponse = await client.SendAsync(requestMessage);
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                var strResponse = await httpResponse.Content.ReadAsStringAsync();
+                var jsonResponse = JsonNode.Parse(strResponse);
+
+                if (jsonResponse != null)
+                {
+                    string paypalOrderId = jsonResponse["status"]?.ToString() ?? "";
+                    if(paypalOrderId == "COMPLETED")
+                    {
+
+                        decimal depositAmount = 0;
+                        try
+                        {
+                            var amountStr = jsonResponse["purchase_units"]?[0]?["payments"]?["captures"]?[0]?["amount"]?["value"]?.ToString();
+                            if (!string.IsNullOrEmpty(amountStr))
+                            {
+                                depositAmount = decimal.Parse(amountStr, CultureInfo.InvariantCulture);
+                                int bankAccountId = int.Parse(accountIdStr!);
+
+                                ApplicationUser? currentUser = await _userManager.GetUserAsync(User);
+
+                                if (currentUser == null)
+                                    return RedirectToAction("Login");
+
+                                ApplicationUser? user = await _context.Users
+                                    .Include(u => u.BankAccounts!)
+                                    .FirstOrDefaultAsync(u => u.Id == currentUser.Id);
+
+                                if (user == null)
+                                    return RedirectToAction("Login");
+
+                                ICollection<BankAccount> userAccounts = user.BankAccounts!;
+
+                                BankAccount depositAcc = userAccounts.FirstOrDefault(u => u.Id == bankAccountId);
+
+                                if (depositAcc == null)
+                                {
+                                    return new JsonResult("error");
+                                }
+
+                                depositAcc.Balance += depositAmount;
+
+                                _context.Transactions.AddRange(new[]
+                                {
+                                    new Transaction
+                                    {
+                                        Amount = depositAmount,
+                                        Type = TransactionType.Deposit,
+                                        Description = $"Deposit",
+                                        BankAccountId = depositAcc.Id,
+                                        UserId = user.Id
+                                    }
+                                });
+
+                                await _context.SaveChangesAsync();
+
+                                return new JsonResult("success");
+
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError("Failed to parse PayPal amount: " + ex.Message);
+                            return new JsonResult("error");
+                        }
+
+                        return new JsonResult("success");
+                    }
+                }
+            }
+            else
+            {
+                var error = await httpResponse.Content.ReadAsStringAsync();
+                _logger.LogError($"PayPal order creation failed: {error}");
+            }
+
+            return new JsonResult("error");
+        }
+
+         [Authorize(Roles = "Client")]
         public async Task<IActionResult> Index()
         {
             ApplicationUser? currentUser = await _userManager.GetUserAsync(User);
@@ -221,10 +493,12 @@ namespace GuardianCapitalLLC.Controllers
                 return View("TransferFundsToInternalAccount", model);
             }
 
-            if (fromAccount.Balance < model.Amount)
+            const decimal internalTransferFee = 5.00m;
+
+            // Check for sufficient balance (amount + fee)
+            if (fromAccount.Balance < model.Amount + internalTransferFee)
             {
-                TempData["ErrorMessage"] = "Insufficient funds in source account.";
-                TempData["ActiveTab"] = "Transfer";
+                ModelState.AddModelError(string.Empty, $"Insufficient funds (transfer + ${internalTransferFee} fee).");
                 return View("TransferFundsToInternalAccount", model);
             }
 
@@ -239,7 +513,8 @@ namespace GuardianCapitalLLC.Controllers
                     Type = TransactionType.Transfer,
                     Description = $"Transfer to {toAccount.Type} account",
                     BankAccountId = fromAccount.Id,
-                    UserId = user.Id
+                    UserId = user.Id,
+                    Date = DateTime.UtcNow
                 },
                 new Transaction
                 {
@@ -247,7 +522,18 @@ namespace GuardianCapitalLLC.Controllers
                     Type = TransactionType.Deposit,
                     Description = $"Transfer from {fromAccount.Type} account",
                     BankAccountId = toAccount.Id,
-                    UserId = user.Id
+                    UserId = user.Id,
+                    Date = DateTime.UtcNow
+                },
+                new Transaction
+                {
+                    Amount = internalTransferFee,
+                    Type = TransactionType.ServiceFee,
+                    Description = "Internal Transfer Fee",
+                    BankAccountId = fromAccount.Id,
+                    UserId = user.Id,
+                    Date = DateTime.UtcNow,
+                    Purpose = PurposeType.Other
                 }
             });
 
@@ -374,10 +660,11 @@ namespace GuardianCapitalLLC.Controllers
                 return View("TransferFundsToExternalAccount", model);
             }
 
-            // Check sufficient balance
-            if (fromAccount.Balance < model.Amount)
+            const decimal externalTransferFee = 50.00m;
+
+            if (fromAccount.Balance < model.Amount + externalTransferFee)
             {
-                ModelState.AddModelError(string.Empty, "Insufficient funds in the source account.");
+                ModelState.AddModelError(string.Empty, $"Insufficient funds (transfer + ${externalTransferFee} fee).");
                 return View("TransferFundsToExternalAccount", model);
             }
 
@@ -387,10 +674,10 @@ namespace GuardianCapitalLLC.Controllers
                 return View("TransferFundsToExternalAccount", model);
             }
 
-            // Deduct amount from source account
-            fromAccount.Balance -= model.Amount;
+            // Deduct total (amount + fee)
+            fromAccount.Balance -= (model.Amount + externalTransferFee);
 
-            // Add transaction record
+            // Main transfer transaction
             Transaction transaction = new Transaction
             {
                 Amount = model.Amount,
@@ -404,7 +691,18 @@ namespace GuardianCapitalLLC.Controllers
                 Purpose = Enum.Parse<PurposeType>(model.Purpose),
             };
 
-            _context.Transactions.Add(transaction);
+            Transaction feeTransaction = new Transaction
+            {
+                Amount = externalTransferFee,
+                Type = TransactionType.ServiceFee,
+                Description = "External Transfer Fee",
+                BankAccountId = fromAccount.Id,
+                UserId = user.Id,
+                Date = DateTime.UtcNow,
+                Purpose = PurposeType.Other
+            };
+
+            _context.Transactions.AddRange(transaction, feeTransaction);
 
             await _context.SaveChangesAsync();
 

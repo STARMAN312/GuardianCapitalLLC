@@ -1,4 +1,4 @@
-﻿@model ExternalTransferFundsVM
+﻿@model DepositVM
 @using System.Text.RegularExpressions
 @using System.Globalization
 
@@ -8,18 +8,18 @@
 
 <div class="mt-2 account-information">
 	<div class="card bg-gray-200 bd-0">
-		<div class="card-body">
+		<div class="card-body mb-2">
 			<form asp-action="ReviewExternalTransfer">
 				<input type="hidden" id="Amount" name="Amount" />
-				@if (!ViewData.ModelState.IsValid)
-				{
-					<div class="card bg-warning text-white">
-						<div class="card-body d-flex align-items-center p-3">
-							<i class="fas fa-exclamation-circle me-2"></i>
-							<div asp-validation-summary="ModelOnly" class="validation-summary-no-bullets flex-grow-1"></div>
-						</div>
-					</div>
-				}
+				@if (!ViewData.ModelState.IsValid) 
+				{ 
+					<div class="card bg-warning text-white"> 
+						<div class="card-body d-flex align-items-center p-3"> 
+							<i class="fas fa-exclamation-circle me-2"></i> 
+							<div asp-validation-summary="ModelOnly" class="validation-summary-no-bullets flex-grow-1"></div> 
+						</div> 
+					</div> 
+				 } 
 				<div class="media mt-0">
 					<span class="me-3 bg-info-transparent text-info transaction-icon">
 						<i class="fas fa-exchange-alt"></i>
@@ -27,38 +27,25 @@
 					<div class="media-body">
 						<div class="d-flex align-items-center">
 							<div class="mt-0">
-								<h5 class="mb-1 tx-20 font-weight-sembold text-dark">Transfer Funds</h5>
-								<p class="mb-0 tx-12 text-dark">Send money securely to any account</p>
+								<h5 class="mb-1 tx-20 font-weight-sembold text-dark">Deposit Funds</h5>
+								<p class="mb-0 tx-12 text-dark">Securely deposit money into your account</p>
 							</div>
 						</div>
 					</div>
 				</div>
-				<div class="form-group mt-5">
-					<label>Select Account</label>
-					<select class="form-control" asp-for="AccountId">
-						<option disabled selected value="">-- Select source account --</option>
-						@foreach (var acc in Model.BankAccounts)
-						{
-							<option value="@acc.Id" data-usd="@acc.Balance.ToString(CultureInfo.InvariantCulture)" class="market-price">
+				<div class="form-group mt-5"> 
+					<label>Select Account</label> 
+					<select class="form-control" asp-for="AccountId"> 
+						<option disabled selected value="">-- Select account to deposit --</option>
+						@foreach (var acc in Model.BankAccounts) 
+						{ 
+							<option value="@acc.Id" data-usd="@acc.Balance.ToString(CultureInfo.InvariantCulture)" class="market-price"> 
 								@Regex.Replace(acc.Type.ToString(), "(\\B[A-Z])", " $1")
-								- <span class="balance-text">$@acc.Balance.ToString("N2") USD</span>
-							</option>
-						}
-					</select>
-				</div>
-				<div class="form-group mt-2 justify-content-end">
-					<label>Transfer Type</label>
-					<label class="rdiobox"><input type="radio" asp-for="TransferType" value="ExternalTransfer"> <span>External Transfer</span></label>
-					<label class="rdiobox"><input type="radio" asp-for="TransferType" value="WireTransfer"> <span>Wire Transfer</span></label>
-				</div>
-				<div class="form-group mt-2">
-					<label>To Account/Card Number</label>
-					<input asp-for="ToAccountNumber" type="text" class="form-control" placeholder="Enter account or card number">
-				</div>
-				<div class="form-group mt-2">
-					<label>Recipient Name</label>
-					<input asp-for="RecipientName" type="text" class="form-control" placeholder="Enter recipient's full name">
-				</div>
+								- <span class="balance-text">$@acc.Balance.ToString("N2") USD</span> 
+							</option> 
+						} 
+					</select> 
+				</div> 
 				<div class="form-group mt-2">
 					<label>Amount</label>
 					<div class="input-group mb-3">
@@ -66,30 +53,70 @@
 						<input type="text" id="AmountInput" class="form-control" placeholder="0.00" />
 					</div>
 				</div>
-				<div class="form-group mt-2">
-					<label>Purpose of Transfer</label>
-					<select class="form-control" asp-for="Purpose" asp-items="(IEnumerable<SelectListItem>)ViewBag.PurposeList">
-						<option disabled selected value="">-- Select purpose --</option>
-					</select>
-				</div>
-				<div class="form-group mt-2">
-					<label>Description (Optional)</label>
-					<textarea asp-for="Description" type="text" class="form-control" placeholder="Add a note or description for this transfer"></textarea>
-				</div>
-				<div class="form-group">
-					<label class="form-label">Password</label>
-					<input asp-for="Pin" type="password" class="form-control" placeholder="Enter your password">
-				</div>
-				<div class="modal-footer">
-					<a asp-controller="Account" asp-action="Index" class="btn btn-outline-dark ms-4 px-5">Cancel</a>
-					<button type="submit" class="btn btn-info px-5">Review Transfer</button>
+				<div class="border p-3 mb-2 rounded d-flex flex-column align-items-center justify-content-center text-center">
+					<div id="notification-container" class="w-100" style="max-width: 70%;">
+						<!-- Notification messages go here -->
+					</div>
+					<div id="paypal-button-container" class="w-100" style="max-width: 70%;">
+						<!-- PayPal button goes here -->
+					</div>
 				</div>
 			</form>
 		</div>
 	</div>
 </div>
 
+<script src="https://www.paypal.com/sdk/js?client-id=@(ViewBag.PaypalClientId)&currency=USD"></script>
+
 <script>
+
+	paypal.Buttons({
+		async createOrder() {
+			const response = await fetch("@Url.ActionLink("ProcessDeposit", "Account")", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+				  amount: document.getElementById("Amount").value,
+				  currency: localStorage.getItem("selectedCurrency") || "USD"
+				})
+			});
+
+			const order = await response.json();
+
+			return order.id;
+		},
+		async onApprove(data) {
+			const response = await fetch("@Url.ActionLink("ConfirmDeposit", "Account")", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+				  orderID: data.orderID,
+				  accountId: document.querySelector('[name="AccountId"]').value
+				})
+			})
+
+			const details = await response.json();
+
+			console.log(details);
+
+			if(details === "success"){
+				window.location.href = '@Url.Action("Index", "Account")';
+			}
+
+		},
+		onCancel(data){
+			document.getElementById("notification-container").innerHTML = 
+			'<div class="alert alert-info alert-dismissible fade show mb-2" role="alert"><strong>Operation cancelled.</strong><button aria-label="Close" class="btn-close" data-bs-dismiss="alert" type="button"><span aria-hidden="true">&times;</span></button></div>';
+		},
+		onError(err){
+			document.getElementById("notification-container").innerHTML =
+			'<div class="alert alert-danger mg-b-0 alert-dismissible fade show mb-2" role="alert "><strong>An error ocurred.</strong> Please try again later.<button aria-label="Close" class="btn-close" data-bs-dismiss="alert" type="button"><span aria-hidden="true">&times;</span></button></div>';
+		}
+	}).render('#paypal-button-container');
 
 	const formattedInput = document.getElementById('AmountInput');
 	const hiddenInput = document.getElementById('Amount');
@@ -159,13 +186,6 @@
 		// Get exchange rates and selected currency from localStorage
 		const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
 		const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
-
-		// Convert rawAmount back to USD
-		// USD amount = rawAmount * (USD rate) / (selectedCurrency rate)
-		// But in your stored data, seems like exchangeRates[currency] = rate in that currency relative to USD?
-		// Let's confirm:
-		// Your previous convertPrice function: priceInUsd * exchangeRates[currency] / exchangeRates["USD"]
-		// To convert from selectedCurrency -> USD, formula: amountInCurrency * exchangeRates["USD"] / exchangeRates[selectedCurrency]
 
 		let amountInUsd = rawAmount;
 		if (exchangeRates[selectedCurrency] && exchangeRates["USD"]) {

@@ -172,6 +172,20 @@ namespace GuardianCapitalLLC.Models
 
     }
 
+    public class DepositVM
+    {
+        public ICollection<BankAccount>? BankAccounts { get; set; }
+        [Required]
+        public int? AccountId { get; set; }
+    }
+
+    public class ConfirmDepositVM
+    {
+        public int OrderID { get; set; }
+        public int AccountId { get; set; }
+    }
+
+
     public class AdminDashboardVM
     {
         public string Username { get; set; }

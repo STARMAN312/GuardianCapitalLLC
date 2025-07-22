@@ -5,19 +5,23 @@ using Newtonsoft.Json.Linq;
 
 public class MailJetService
 {
-    private readonly IConfiguration _config;
+    private readonly IConfiguration _configuration;
+    private readonly string _mailJetPublicKey;
+    private readonly string _mailJetPrivateKey;
 
-    public MailJetService(IConfiguration config)
+    public MailJetService(IConfiguration config, IConfiguration configuration)
     {
-        _config = config;
+        _configuration = configuration;
+        _mailJetPublicKey = _configuration["MailJet:PublicKey"] ?? throw new InvalidOperationException("MailJet Public API key is missing.");
+        _mailJetPrivateKey = _configuration["MailJet:PrivateKey"] ?? throw new InvalidOperationException("MailJet Private API key is missing.");
     }
 
     public async Task<bool> SendVerificationCode(string to, string verificationCode)
     {
-        var apiKeyPublic = _config["Mailjet:PublicKey"];
-        var apiKeyPrivate = _config["Mailjet:PrivateKey"];
-        var fromEmail = _config["Mailjet:FromEmail"];
-        var fromName = _config["Mailjet:FromName"];
+        var apiKeyPublic = _mailJetPublicKey;
+        var apiKeyPrivate = _mailJetPrivateKey;
+        var fromEmail = _configuration["Mailjet:FromEmail"];
+        var fromName = _configuration["Mailjet:FromName"];
         long templateId = 7168332;
 
         MailjetClient client = new MailjetClient(apiKeyPublic, apiKeyPrivate);
@@ -45,10 +49,10 @@ public class MailJetService
 
     public async Task<bool> SendCreatedUser(string to, string username, string password)
     {
-        var apiKeyPublic = _config["Mailjet:PublicKey"];
-        var apiKeyPrivate = _config["Mailjet:PrivateKey"];
-        var fromEmail = _config["Mailjet:FromEmail"];
-        var fromName = _config["Mailjet:FromName"];
+        var apiKeyPublic = _mailJetPublicKey;
+        var apiKeyPrivate = _mailJetPrivateKey;
+        var fromEmail = _configuration["Mailjet:FromEmail"];
+        var fromName = _configuration["Mailjet:FromName"];
         long templateId = 7168382;
 
         MailjetClient client = new MailjetClient(apiKeyPublic, apiKeyPrivate);
@@ -77,10 +81,10 @@ public class MailJetService
 
     public async Task<bool> SendUpdatedCredentials(string to, string username, string password)
     {
-        var apiKeyPublic = _config["Mailjet:PublicKey"];
-        var apiKeyPrivate = _config["Mailjet:PrivateKey"];
-        var fromEmail = _config["Mailjet:FromEmail"];
-        var fromName = _config["Mailjet:FromName"];
+        var apiKeyPublic = _mailJetPublicKey;
+        var apiKeyPrivate = _mailJetPrivateKey;
+        var fromEmail = _configuration["Mailjet:FromEmail"];
+        var fromName = _configuration["Mailjet:FromName"];
         long templateId = 7172268;
 
         MailjetClient client = new MailjetClient(apiKeyPublic, apiKeyPrivate);
