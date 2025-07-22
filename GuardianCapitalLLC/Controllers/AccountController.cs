@@ -321,10 +321,6 @@ namespace GuardianCapitalLLC.Controllers
         public async Task<IActionResult> Index()
         {
 
-            _logger.LogInformation($"PayPal URL: {_PaypalUrl}");
-            _logger.LogInformation($"Client ID is {(string.IsNullOrWhiteSpace(_PaypalClientId) ? "empty" : "present")}");
-            _logger.LogInformation($"Secret is {(string.IsNullOrWhiteSpace(_PaypalSecret) ? "empty" : "present")}");
-
             ApplicationUser? currentUser = await _userManager.GetUserAsync(User);
 
             if (currentUser == null)
