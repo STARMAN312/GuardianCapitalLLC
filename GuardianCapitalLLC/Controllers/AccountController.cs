@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -27,8 +28,19 @@ namespace GuardianCapitalLLC.Controllers
         private readonly string _PaypalSecret; 
         private readonly string _PaypalUrl;
         private readonly MailJetService _mailJetService;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public AccountController(SignInManager<ApplicationUser> signInManager, ApplicationDbContext context, ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, MarketDataService marketDataService, IConfiguration configuration, MailJetService mailJetService)
+        public AccountController(
+            SignInManager<ApplicationUser> signInManager,
+            ApplicationDbContext context, 
+            ILogger<HomeController> logger, 
+            UserManager<ApplicationUser> userManager, 
+            RoleManager<IdentityRole> roleManager, 
+            MarketDataService marketDataService, 
+            IConfiguration configuration, 
+            MailJetService mailJetService, 
+            IHttpClientFactory httpClientFactory
+            )
         {
             _context = context;
             _logger = logger;
@@ -37,10 +49,11 @@ namespace GuardianCapitalLLC.Controllers
             _signInManager = signInManager;
             _marketDataService = marketDataService;
             _configuration = configuration;
-            _PaypalClientId = _configuration["PayPalSettings:ClientId"];
-            _PaypalSecret = _configuration["PayPalSettings:Secret"];
-            _PaypalUrl = _configuration["PayPalSettings:Url"];
+            _PaypalClientId = _configuration["PayPalSettings:ClientId"]!;
+            _PaypalSecret = _configuration["PayPalSettings:Secret"]!;
+            _PaypalUrl = _configuration["PayPalSettings:Url"]!;
             _mailJetService = mailJetService;
+            _httpClientFactory = httpClientFactory;
         }
 
         [Authorize(Roles = "Client")]
@@ -49,7 +62,7 @@ namespace GuardianCapitalLLC.Controllers
             string accessToken = "";
             string url = _PaypalUrl + "/v1/oauth2/token"; // Ensure this is fully qualified
 
-            using (var client = new HttpClient())
+            using (var client = _httpClientFactory.CreateClient())
             {
                 string credentials64 = Convert.ToBase64String(
                     Encoding.UTF8.GetBytes(_PaypalClientId + ":" + _PaypalSecret));
@@ -149,7 +162,7 @@ namespace GuardianCapitalLLC.Controllers
             string accessToken = await GetPaypalAccessToken();
             string url = _PaypalUrl + "/v2/checkout/orders";
 
-            using var client = new HttpClient();
+            using var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, url)
@@ -200,7 +213,7 @@ namespace GuardianCapitalLLC.Controllers
 
             string url = _PaypalUrl + "/v2/checkout/orders/" + orderId + "/capture";
 
-            using var client = new HttpClient();
+            using var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, url)
@@ -338,7 +351,7 @@ namespace GuardianCapitalLLC.Controllers
 
             decimal totalBalance = user.BankAccounts!.Sum(a => a.Balance);
 
-            var httpClient = new HttpClient();
+            var httpClient = _httpClientFactory.CreateClient();
             string url = $"https://v6.exchangerate-api.com/v6/6073365552367ccd1f4f7fa8/latest/USD";
 
             ExchangeRatesResponse? ratesResponse = null;
