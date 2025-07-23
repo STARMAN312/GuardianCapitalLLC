@@ -115,6 +115,15 @@ namespace GuardianCapitalLLC.Models
         public Dictionary<string, List<MarketQuoteVM>>? MarketData { get; set; }
     }
 
+    public class PrintProfileVM
+    {
+        public string FullName { get; set; }
+        public decimal TotalBalance { get; set; }
+        public virtual ICollection<BankAccount> BankAccounts { get; set; }
+        public virtual ICollection<TransactionVM> Transactions { get; set; }
+        public Dictionary<string, decimal>? ConvertedBalances { get; set; }
+    }
+
     public class BankAccountsView
     {
         public string UserId { get; set; }

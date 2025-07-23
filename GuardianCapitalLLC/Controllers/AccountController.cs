@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Net.Http;
@@ -347,19 +348,6 @@ namespace GuardianCapitalLLC.Controllers
 
             decimal totalBalance = user.BankAccounts!.Sum(a => a.Balance);
 
-            var httpClient = _httpClientFactory.CreateClient();
-            string url = $"https://v6.exchangerate-api.com/v6/6073365552367ccd1f4f7fa8/latest/USD";
-
-            ExchangeRatesResponse? ratesResponse = null;
-            try
-            {
-                ratesResponse = await httpClient.GetFromJsonAsync<ExchangeRatesResponse>(url);
-            }
-            catch
-            {
-                return NotFound();
-            }
-
             Dictionary<string, decimal> convertedBalances = await _marketDataService.GetConvertedBalancesAsync(totalBalance);
 
             var marketData = await _marketDataService.GetMarketDataAsync();
@@ -372,6 +360,53 @@ namespace GuardianCapitalLLC.Controllers
                 Transactions = allTransactions,
                 ConvertedBalances = convertedBalances,
                 MarketData = marketData,
+            };
+
+            return View(userView);
+        }
+
+        [Authorize(Roles = "Client")]
+        public async Task<IActionResult> PrintProfile()
+        {
+            ViewBag.HideBanner = true;
+            ViewBag.Hide = true;
+
+            ApplicationUser? currentUser = await _userManager.GetUserAsync(User);
+
+            if (currentUser == null)
+                return RedirectToAction("Login");
+
+            ApplicationUser? user = await _context.Users
+                .Include(u => u.BankAccounts!)
+                .ThenInclude(a => a.Transactions)
+                .FirstOrDefaultAsync(u => u.Id == currentUser.Id);
+
+            if (user == null)
+                return RedirectToAction("Login");
+
+            List<TransactionVM> allTransactions = user.BankAccounts!
+                .SelectMany(account => account.Transactions.Select(t => new TransactionVM
+                {
+                    AccountName = account.Type.ToString(),
+                    Type = t.Type,
+                    Amount = t.Amount,
+                    Date = t.Date,
+                }))
+                .OrderByDescending(t => t.Date)
+                .Take(10)
+                .ToList();
+
+            decimal totalBalance = user.BankAccounts!.Sum(a => a.Balance);
+
+            Dictionary<string, decimal> convertedBalances = await _marketDataService.GetConvertedBalancesAsync(totalBalance);
+
+            PrintProfileVM userView = new PrintProfileVM
+            {
+                FullName = user.FullName!,
+                TotalBalance = totalBalance,
+                BankAccounts = user.BankAccounts!,
+                Transactions = allTransactions,
+                ConvertedBalances = convertedBalances,
             };
 
             return View(userView);

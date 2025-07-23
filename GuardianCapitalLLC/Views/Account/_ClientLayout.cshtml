@@ -58,7 +58,7 @@
 						<div class="justify-content-center mt-2">
 							<ol class="breadcrumb">
 								<li class="breadcrumb-item">
-									@if (User.IsInRole("Client"))
+									@if (User.IsInRole("Client") && ViewBag.Hide != true)
 									{
 										<div class="justify-content-center mt-2">
 											<a asp-controller="Account" asp-action="Logout" class="btn btn-danger">Log Out</a>

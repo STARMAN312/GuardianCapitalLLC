@@ -52,52 +52,56 @@
 							}
 						</div>
 					</div>
-					<div class="card-header pb-1">
-						<h3 class="card-title mb-2">Account Summary</h3>
-					</div>
 					<div class="card-body p-0">
-						<div class="browser-stats">
-							<div class="d-flex align-items-center item  border-bottom my-2">
-								<div class="d-flex">
-									<div class="">
-										<span class="font-weight-semibold tx-20">Total Balance</span>
-									</div>
-								</div>
-								<div class="ms-auto my-auto">
-									<div class="d-flex">
-										<span class="me-4 mt-1 font-weight-semibold text-success tx-20" id="convertedBalance">$@Model.TotalBalance.ToString("N2") USD</span>
-									</div>
-								</div>
+						<div>
+							<div class="card-header pb-1">
+								<h3 class="card-title mb-2">Account Summary</h3>
 							</div>
-							@foreach (BankAccount bankAccount in Model.BankAccounts)
-							{
+							<div class="browser-stats">
 								<div class="d-flex align-items-center item  border-bottom my-2">
 									<div class="d-flex">
 										<div class="">
-											<h6 class="">@Regex.Replace(bankAccount.Type.ToString(), "(\\B[A-Z])", " $1") Account</h6>
+											<span class="font-weight-semibold tx-20">Total Balance</span>
 										</div>
 									</div>
 									<div class="ms-auto my-auto">
 										<div class="d-flex">
-											<span class="me-4 mt-1 font-weight-semibold tx-16 market-price" data-usd="@bankAccount.Balance">$@bankAccount.Balance.ToString("N2")</span>
+											<span class="me-4 mt-1 font-weight-semibold text-success tx-20" id="convertedBalance">$@Model.TotalBalance.ToString("N2") USD</span>
 										</div>
 									</div>
 								</div>
-							}
+								@foreach (BankAccount bankAccount in Model.BankAccounts)
+								{
+									<div class="d-flex align-items-center item  border-bottom my-2">
+										<div class="d-flex">
+											<div class="">
+												<h6 class="">@Regex.Replace(bankAccount.Type.ToString(), "(\\B[A-Z])", " $1") Account</h6>
+											</div>
+										</div>
+										<div class="ms-auto my-auto">
+											<div class="d-flex">
+												<span class="me-4 mt-1 font-weight-semibold tx-16 market-price" data-usd="@bankAccount.Balance">$@bankAccount.Balance.ToString("N2")</span>
+											</div>
+										</div>
+									</div>
+								}
+							</div>
 						</div>
-						<a asp-controller="Account" asp-action="Deposit" class="btn btn-info btn-lg btn-block">
-							Deposit to Account
-						</a>
-						<a asp-controller="Account" asp-action="TransferFundsToInternalAccount" class="btn btn-primary btn-lg btn-block">
-							Transfer Between My Accounts
-						</a>
-						<a asp-controller="Account" asp-action="TransferFundsToExternalAccount" class="btn btn-primary btn-lg btn-block">
-							Transfer to External Account
-						</a>
+						<div>
+							<a asp-controller="Account" asp-action="Deposit" class="btn btn-info btn-lg btn-block">
+								Deposit to Account
+							</a>
+							<a asp-controller="Account" asp-action="TransferFundsToInternalAccount" class="btn btn-primary btn-lg btn-block">
+								Transfer Between My Accounts
+							</a>
+							<a asp-controller="Account" asp-action="TransferFundsToExternalAccount" class="btn btn-primary btn-lg btn-block">
+								Transfer to External Account
+							</a>
+						</div>
 					</div>
 				</div>
 			</div>
-			<div class="col-xl-12 col-lg-12 col-md-12 col-xs-12">
+			<div class="col-xl-12 col-lg-12 col-md-12 col-xs-12 printable-profile">
 				<div class="card p-2">
 					<div class="card-header pb-1">
 						<h3 class="card-title mb-2">Transaction History</h3>
@@ -280,6 +284,12 @@
 			</div>
 		</div>
 	}
+
+	<div class="text-end mt-4">
+		<a class="btn btn-outline-primary" asp-action="PrintProfile" asp-controller="Account">🖨️ Print User Profile</a>
+	</div>
+
+
 	@if (TempData["ExternalTransferModal"]?.ToString() == "Active")
 	{
 		<div class="modal fade active" id="modaldemo5">
@@ -329,6 +339,7 @@
 </div>
 
 <script>
+
 	const exchangeRates = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ConvertedBalances));
 	localStorage.setItem('exchangeRates', JSON.stringify(exchangeRates));
 	let selectedCurrency = localStorage.getItem('selectedCurrency') || 'USD';
@@ -422,4 +433,5 @@
 		const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
 		document.getElementById("externalCurrency").value = selectedCurrency;
 	});
+
 </script>

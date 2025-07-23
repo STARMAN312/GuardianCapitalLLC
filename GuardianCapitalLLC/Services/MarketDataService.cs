@@ -30,7 +30,12 @@ namespace GuardianCapitalLLC.Services
             { "IWM", "iShares Russell 2000 ETF" },
             { "USO", "United States Oil Fund" },
             { "GLD", "SPDR Gold Shares" },
-            { "WEAT", "Teucrium Wheat Fund" }
+            { "WEAT", "Teucrium Wheat Fund" },
+            { "BINANCE:BTCUSDT", "Bitcoin" },
+            { "BINANCE:ETHUSDT", "Ethereum" },
+            { "BINANCE:SOLUSDT", "Solana" },
+            { "BINANCE:ADAUSDT", "Cardano" },
+            { "BINANCE:XRPUSDT", "XRP" },
         };
 
         public MarketDataService(
@@ -49,10 +54,42 @@ namespace GuardianCapitalLLC.Services
         public async Task<Dictionary<string, List<MarketQuoteVM>>> GetMarketDataAsync()
         {
             var categories = new Dictionary<string, List<string>>
-        {
-            { "Stocks", new List<string> { "AAPL", "MSFT", "TSLA" } },
-            { "Indexes", new List<string> { "SPY", "QQQ", "DIA", "IWM" }  }, // S&P 500, NASDAQ, Dow Jones, Russell 2000
-            { "Commodities", new List<string> { "USO", "GLD", "WEAT" } },    // Oil ETF, Gold ETF, Wheat ETF
+            {
+                { 
+                    "Stocks", new List<string> 
+                    { 
+                        "AAPL", 
+                        "MSFT", 
+                        "TSLA" 
+                    } 
+                },
+                {
+                    "Cryptocurrencies", new List<string>
+                    {
+                        "BINANCE:BTCUSDT",
+                        "BINANCE:ETHUSDT",
+                        "BINANCE:SOLUSDT",
+                        "BINANCE:ADAUSDT",
+                        "BINANCE:XRPUSDT"
+                    }
+                },
+                { 
+                    "Indexes", new List<string> 
+                    { 
+                        "SPY", 
+                        "QQQ", 
+                        "DIA", 
+                        "IWM" 
+                    } 
+                },
+                { 
+                    "Commodities", new List<string> 
+                    { 
+                        "USO", 
+                        "GLD", 
+                        "WEAT" 
+                    } 
+                },
             };
 
 
@@ -115,6 +152,13 @@ namespace GuardianCapitalLLC.Services
                         {
                             logoUrl = logoElement.GetString();
                         }
+                    }
+                }
+                else
+                {
+                    if (string.IsNullOrWhiteSpace(companyName) && FallbackCompanyNames.TryGetValue(symbol, out var fallbackName))
+                    {
+                        companyName = fallbackName;
                     }
                 }
 
