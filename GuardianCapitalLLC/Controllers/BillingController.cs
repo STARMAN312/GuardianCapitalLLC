@@ -125,5 +125,14 @@ namespace GuardianCapitalLLC.Controllers
             // Not enough funds in any account
             return false;
         }
+
+        [HttpPost("test-cron")]
+        public IActionResult TestCron([FromHeader(Name = "X-API-KEY")] string apiKey)
+        {
+            if (apiKey != _maintenanceApiKey)
+                return Unauthorized("Invalid API key");
+
+            return Ok("✅ Yup, it works!");
+        }
     }
 }
