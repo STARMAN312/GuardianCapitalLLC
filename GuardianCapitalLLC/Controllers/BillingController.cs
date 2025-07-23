@@ -30,6 +30,51 @@ namespace GuardianCapitalLLC.Controllers
             return Ok("Maintenance fees charged.");
         }
 
+        [HttpPost("accrue-interest-daily")]
+        public async Task<IActionResult> AccrueDailyInterest([FromHeader(Name = "X-API-KEY")] string apiKey)
+        {
+            if (apiKey != _maintenanceApiKey)
+                return Unauthorized("Invalid API key");
+
+            await AccrueInterestAsync();
+            return Ok("Daily interest accrued.");
+        }
+
+        private async Task AccrueInterestAsync()
+        {
+            const decimal dailyInterestRate = 0.00057534m;
+
+            var users = await _db.Users
+                .Include(u => u.BankAccounts)
+                .ThenInclude(b => b.Transactions)
+                .Where(u => u.BankAccounts.Any(a => a.Type == BankAccount.AccountType.Savings))
+                .ToListAsync();
+
+            foreach (var user in users)
+            {
+                foreach (var account in user.BankAccounts.Where(a => a.Type == BankAccount.AccountType.Savings))
+                {
+                    var interest = account.Balance * dailyInterestRate;
+                    if (interest <= 0) continue;
+
+                    account.Balance += interest;
+
+                    account.Transactions.Add(new Transaction
+                    {
+                        Amount = interest,
+                        Type = TransactionType.Interest,
+                        Description = "Daily Savings Interest",
+                        Purpose = PurposeType.Other,
+                        Date = DateTime.UtcNow,
+                        BankAccountId = account.Id,
+                        UserId = user.Id
+                    });
+                }
+            }
+
+            await _db.SaveChangesAsync();
+        }
+
         private async Task ChargeMaintenanceAsync()
         {
             var users = await _db.Users

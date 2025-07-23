@@ -29,6 +29,7 @@ public enum TransactionType
     ExternalTransfer,
     WireTransfer,
     ServiceFee,
+    Interest,
 }
 
 public enum PurposeType
