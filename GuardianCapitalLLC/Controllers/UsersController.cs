@@ -109,6 +109,7 @@ namespace GuardianCapitalLLC.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public IActionResult Download(int id)
         {
             var file = _context.UserFiles.FirstOrDefault(f => f.Id == id);
@@ -130,7 +131,7 @@ namespace GuardianCapitalLLC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public IActionResult DeleteFile(int Id, string UserId)
         {
             var file = _context.UserFiles.FirstOrDefault(f => f.Id == Id);

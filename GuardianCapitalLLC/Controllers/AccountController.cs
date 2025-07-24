@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
@@ -30,6 +31,7 @@ namespace GuardianCapitalLLC.Controllers
         private readonly string _PaypalUrl;
         private readonly MailJetService _mailJetService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IWebHostEnvironment _env;
 
         public AccountController(
             SignInManager<ApplicationUser> signInManager,
@@ -40,7 +42,8 @@ namespace GuardianCapitalLLC.Controllers
             MarketDataService marketDataService, 
             IConfiguration configuration, 
             MailJetService mailJetService, 
-            IHttpClientFactory httpClientFactory
+            IHttpClientFactory httpClientFactory,
+            IWebHostEnvironment env
             )
         {
             _context = context;
@@ -55,6 +58,8 @@ namespace GuardianCapitalLLC.Controllers
             _PaypalUrl = _configuration["PayPalSettings:Url"]!;
             _mailJetService = mailJetService;
             _httpClientFactory = httpClientFactory;
+            _env = env;
+
         }
 
         [Authorize(Roles = "Client")]
@@ -124,6 +129,25 @@ namespace GuardianCapitalLLC.Controllers
 
             ViewBag.PaypalClientId = _PaypalClientId;
             return View(depositView);
+        }
+
+        [HttpGet]
+        public IActionResult DownloadClientPdf()
+        {
+            var relativePath = Path.Combine("App_Data", "OurClients", "Guardian Capitol - Clients.pdf");
+            var filePath = Path.Combine(_env.ContentRootPath, relativePath);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound();
+
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(filePath, out var contentType))
+            {
+                contentType = "application/pdf";
+            }
+
+            var fileName = Path.GetFileName(filePath);
+            return PhysicalFile(filePath, contentType, fileName);
         }
 
         [Authorize(Roles = "Client")]
