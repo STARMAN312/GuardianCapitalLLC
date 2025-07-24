@@ -21,9 +21,15 @@
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="App_Data\Uploads\" />
-	<Folder Include="App_Data\OurClients\" />
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="App_Data\Uploads\" />
+		<Folder Include="App_Data\OurClients\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="App_Data\OurClients\**\*.*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
 </Project>
