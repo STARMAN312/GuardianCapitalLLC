@@ -9,7 +9,7 @@
 <div class="mt-2 account-information">
 	<div class="card bg-gray-200 bd-0">
 		<div class="card-body mb-2">
-			<form asp-action="ReviewExternalTransfer">
+			<form>
 				<input type="hidden" id="Amount" name="Amount" />
 				@if (!ViewData.ModelState.IsValid) 
 				{ 
@@ -53,13 +53,30 @@
 						<input type="text" id="AmountInput" class="form-control" placeholder="0.00" />
 					</div>
 				</div>
-				<div class="border p-3 mb-2 rounded d-flex flex-column align-items-center justify-content-center text-center">
+				<div class="border p-3 mb-2 mt-2 rounded d-flex flex-column align-items-center justify-content-center text-center">
 					<div id="notification-container" class="w-100" style="max-width: 70%;">
 						<!-- Notification messages go here -->
 					</div>
 					<div id="paypal-button-container" class="w-100" style="max-width: 70%;">
 						<!-- PayPal button goes here -->
 					</div>
+				</div>
+				<div class="main-icon-group main-icon-list font-awesome mt-1">
+					<span class="mb-0 tx-15 text-dark">Other accepted payment methods</span>
+					<ul class="icons-list">
+						<li class="icons-list-item" data-bs-placement="top" data-bs-toggle="tooltip" title="Western Union (Contact support for more information)">
+							<img src="~/img/payments/westernunion-dark.svg" alt="Western Union" style="height: 24px; width: auto;">
+						</li>
+						<li class="icons-list-item" data-bs-placement="top" data-bs-toggle="tooltip" title="Moneygram (Contact support for more information)">
+							<img src="~/img/payments/moneygram-seeklogo.svg" alt="Moneygram" style="height: 24px; width: auto;">
+						</li>
+						<li class="icons-list-item" data-bs-placement="top" data-bs-toggle="tooltip" title="Wells Fargo (Contact support for more information)">
+							<img src="~/img/payments/WFC.svg" alt="Wells Fargo" style="height: 24px; width: auto;">
+						</li>
+						<li class="icons-list-item" data-bs-placement="top" data-bs-toggle="tooltip" title="Chase Bank (Contact support for more information)">
+							<img src="~/img/payments/Chase_Bank-Logo.wine.svg" alt="Chase Bank" style="height: 24px; width: auto;">
+						</li>
+					</ul>
 				</div>
 			</form>
 		</div>

@@ -12,12 +12,18 @@ namespace GuardianCapitalLLC.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly string _maintenanceApiKey;
+        private readonly MailJetService _mailJetService;
 
-        public BillingController(ApplicationDbContext db, IConfiguration configuration)
+        public BillingController(
+            ApplicationDbContext db, 
+            IConfiguration configuration,
+            MailJetService mailJetService
+        )
         {
             _db = db;
             _maintenanceApiKey = configuration["Maintenance:ApiKey"]
                 ?? throw new InvalidOperationException("Missing Maintenance API Key");
+            _mailJetService = mailJetService;
         }
 
         [HttpPost("charge-maintenance")]
@@ -50,14 +56,22 @@ namespace GuardianCapitalLLC.Controllers
                 .Where(u => u.BankAccounts.Any(a => a.Type == BankAccount.AccountType.Savings))
                 .ToListAsync();
 
+            decimal interestSent = 0m, previousBalance = 0m, currentBalance = 0m;
+
             foreach (var user in users)
             {
                 foreach (var account in user.BankAccounts.Where(a => a.Type == BankAccount.AccountType.Savings))
                 {
+                    previousBalance = account.Balance;
+
                     var interest = account.Balance * dailyInterestRate;
                     if (interest <= 0) continue;
 
+                    interestSent = interest;
+
                     account.Balance += interest;
+
+                    currentBalance = account.Balance;
 
                     account.Transactions.Add(new Transaction
                     {
@@ -70,6 +84,24 @@ namespace GuardianCapitalLLC.Controllers
                         UserId = user.Id
                     });
                 }
+
+                DateTime utcNow = DateTime.UtcNow;
+
+                TimeZoneInfo pacificZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+                DateTime pacificTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, pacificZone);
+
+                string formatted = pacificTime.ToString("MMMM d, yyyy");
+
+                Console.WriteLine(formatted);
+
+                await _mailJetService.SendDailyInterest(
+                    user.PersonalEmail,
+                    interestSent.ToString("F2"),
+                    formatted,
+                    previousBalance.ToString("F2"),
+                    currentBalance.ToString("F2")
+                );
+
             }
 
             await _db.SaveChangesAsync();
@@ -124,15 +156,6 @@ namespace GuardianCapitalLLC.Controllers
 
             // Not enough funds in any account
             return false;
-        }
-
-        [HttpPost("test-cron")]
-        public IActionResult TestCron([FromHeader(Name = "X-API-KEY")] string apiKey)
-        {
-            if (apiKey != _maintenanceApiKey)
-                return Unauthorized("Invalid API key");
-
-            return Ok("✅ Yup, it works!");
         }
     }
 }

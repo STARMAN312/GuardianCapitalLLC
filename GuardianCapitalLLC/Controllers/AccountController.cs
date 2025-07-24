@@ -283,14 +283,11 @@ namespace GuardianCapitalLLC.Controllers
 
                                 DateTime utcNow = DateTime.UtcNow;
 
-                                // Convert to Pacific Time
                                 TimeZoneInfo pacificZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
                                 DateTime pacificTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, pacificZone);
 
-                                // Determine time zone abbreviation (PST or PDT)
                                 string tzAbbr = pacificZone.IsDaylightSavingTime(pacificTime) ? "PDT" : "PST";
 
-                                // Format the string
                                 string formatted = pacificTime.ToString("MMMM d, yyyy 'at' h:mm tt") + $" {tzAbbr}";
 
                                 await _mailJetService.SendConfirmedDeposit(user.PersonalEmail, depositAmount.ToString(), formatted);
