@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <Folder Include="App_Data\Uploads\" />
+	<Folder Include="App_Data\OurClients\" />
   </ItemGroup>
 
 </Project>
