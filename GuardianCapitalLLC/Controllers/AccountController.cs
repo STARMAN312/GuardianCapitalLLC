@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Principal;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -129,6 +130,93 @@ namespace GuardianCapitalLLC.Controllers
 
             ViewBag.PaypalClientId = _PaypalClientId;
             return View(depositView);
+        }
+
+        [Authorize(Roles = "Client")]
+        public IActionResult ResetPassword()
+        {
+            ViewBag.HideBanner = true;
+
+            return View();
+        }
+
+        [Authorize(Roles = "Client")]
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(ResetPasswordVM model)
+        {
+
+            ViewBag.HideBanner = true;
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                ModelState.AddModelError(string.Empty, "User not found.");
+                return View(model);
+            }
+
+            ApplicationUser? user = await _context.Users
+                .Include(u => u.BankAccounts!)
+                .ThenInclude(a => a.Transactions)
+                .FirstOrDefaultAsync(u => u.Id == currentUser.Id);
+
+            const decimal fee = 5.00m;
+
+            var orderedAccounts = user.BankAccounts
+                .OrderBy(a =>
+                    a.Type == BankAccount.AccountType.Checking ? 0 :
+                    a.Type == BankAccount.AccountType.Savings ? 1 :
+                    a.Type == BankAccount.AccountType.TrustFund ? 2 : 3)
+                .ToList();
+
+            foreach (var account in orderedAccounts)
+            {
+                if (account.Balance >= fee)
+                {
+
+                    if (model.NewPassword != model.NewPasswordConfirm)
+                    {
+                        ModelState.AddModelError(string.Empty, "New pins do not match.");
+                        return View(model);
+                    }
+
+                    var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+                    if (!result.Succeeded)
+                    {
+                        foreach (var error in result.Errors)
+                        {
+                            ModelState.AddModelError(string.Empty, error.Description);
+                        }
+                        return View(model);
+                    }
+
+                    account.Balance -= fee;
+
+                    account.Transactions.Add(new Transaction
+                    {
+                        Amount = fee,
+                        Type = TransactionType.ServiceFee,
+                        Description = "Internal Pin Change Fee",
+                        BankAccountId = account.Id,
+                        UserId = user.Id,
+                        Date = DateTime.UtcNow,
+                        Purpose = PurposeType.Other
+                    });
+
+                    await _context.SaveChangesAsync();
+
+                    await _mailJetService.SendUpdatedCredentials(user.PersonalEmail, user.UserName, model.NewPassword);
+
+                    return RedirectToAction("Index");
+
+                }
+            }
+
+            ModelState.AddModelError(string.Empty, $"Insufficient funds (${fee} USD fee).");
+            return View("ResetPassword", model);
+
         }
 
         [HttpGet]

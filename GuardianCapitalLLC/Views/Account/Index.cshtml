@@ -293,7 +293,9 @@
 	<div class="text-end mt-4">
 		<a class="btn btn-outline-primary" asp-action="PrintProfile" asp-controller="Account">🖨️ Print User Profile</a>
 	</div>
-
+	<div class="text-end mt-4">
+		<a class="btn btn-outline-primary" asp-action="ResetPassword" asp-controller="Account">Reset Your Pin Number</a>
+	</div>
 
 	@if (TempData["ExternalTransferModal"]?.ToString() == "Active")
 	{

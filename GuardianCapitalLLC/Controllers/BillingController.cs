@@ -111,7 +111,7 @@ namespace GuardianCapitalLLC.Controllers
         {
             var users = await _db.Users
                 .Include(u => u.BankAccounts)
-                    .ThenInclude(b => b.Transactions)
+                .ThenInclude(b => b.Transactions)
                 .Where(u => u.BankAccounts.Any())
                 .ToListAsync();
 
