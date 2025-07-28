@@ -190,19 +190,22 @@ namespace GuardianCapitalLLC.Controllers
                         {
                             Type = BankAccount.AccountType.Checking,
                             Balance = 0,
-                            UserId = user.Id
+                            UserId = user.Id,
+                            AccountNumber = GenerateUniqueAccountNumber(),
                         },
                         new BankAccount
                         {
                             Type = BankAccount.AccountType.Savings,
                             Balance = 0,
-                            UserId = user.Id
+                            UserId = user.Id,
+                            AccountNumber = GenerateUniqueAccountNumber(),
                         },
                         new BankAccount
                         {
                             Type = BankAccount.AccountType.TrustFund,
                             Balance = 0,
-                            UserId = user.Id
+                            UserId = user.Id,
+                            AccountNumber = GenerateUniqueAccountNumber(),
                         }
                     };
 
@@ -225,6 +228,31 @@ namespace GuardianCapitalLLC.Controllers
 
             ModelState.AddModelError(string.Empty, "Please fill in all required fields.");
             return View();
+        }
+
+        private string Generate12DigitAccountNumber()
+        {
+            byte[] buffer = new byte[8]; // 64 bits
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(buffer);
+            }
+
+            ulong value = BitConverter.ToUInt64(buffer, 0);
+            ulong number = value % 1_000_000_000_000;
+
+            return number.ToString("D12");
+        }
+        private string GenerateUniqueAccountNumber()
+        {
+            string number;
+            do
+            {
+                number = Generate12DigitAccountNumber();
+            }
+            while (_context.BankAccounts.Any(a => a.AccountNumber == number));
+
+            return number;
         }
 
         [Authorize(Roles = "Admin")]

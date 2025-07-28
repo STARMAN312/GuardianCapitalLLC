@@ -79,8 +79,14 @@
 								{
 									<div class="d-flex align-items-center item  border-bottom my-2">
 										<div class="d-flex">
-											<div class="">
-												<h6 class="">@Regex.Replace(bankAccount.Type.ToString(), "(\\B[A-Z])", " $1") Account</h6>
+											<div>
+												<h6>@Regex.Replace(bankAccount.Type.ToString(), "(\\B[A-Z])", " $1") Account</h6>
+												<span class="tx-12">
+													Account number:
+													<span class="account-number-mask" data-full="@bankAccount.AccountNumber">
+														****@bankAccount.AccountNumber[^4..]
+													</span>
+												</span>
 											</div>
 										</div>
 										<div class="ms-auto my-auto">

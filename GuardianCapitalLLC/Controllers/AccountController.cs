@@ -881,44 +881,8 @@ namespace GuardianCapitalLLC.Controllers
             return RedirectToAction("Index");
         }
 
-        public async Task<IActionResult> Login()
+        public IActionResult Login()
         {
-
-            // Ensure roles exist
-            if (!_roleManager.Roles.Any())
-            {
-                string[] roles = new[] { "Admin", "Client" };
-                foreach (string role in roles)
-                {
-                    await _roleManager.CreateAsync(new IdentityRole(role));
-                }
-            }
-
-            // Ensure default admin user exists
-            if (!_userManager.Users.Any())
-            {
-                ApplicationUser adminUser = new ApplicationUser
-                {
-                    UserName = "Irvin",
-                    Email = "irvinarielmadrid@gmail.com",
-                };
-
-                string adminPassword = "5VQ4=R0I£#rU;lqs'H>p6S(N18gGTxl6G;Z/(@UkIic!PjGv";
-
-                IdentityResult result = await _userManager.CreateAsync(adminUser, adminPassword);
-                if (result.Succeeded)
-                {
-                    await _userManager.AddToRoleAsync(adminUser, "Admin");
-                }
-                else
-                {
-                    foreach (IdentityError error in result.Errors)
-                    {
-                        Console.WriteLine($"Admin user creation error: {error.Description}");
-                    }
-                }
-            }
-
             return View();
         }
 

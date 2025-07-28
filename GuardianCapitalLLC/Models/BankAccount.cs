@@ -14,7 +14,7 @@
 
         // Transactions for this account
         public virtual ICollection<Transaction> Transactions { get; set; }
-
+        public string AccountNumber { get; set; }
         public enum AccountType
         {
             Checking,

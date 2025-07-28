@@ -198,3 +198,29 @@ body {
 .contact-info {
     font-family: "Poppins", sans-serif !important;
 }
+
+.account-number-mask {
+    position: relative;
+    cursor: pointer;
+}
+
+    .account-number-mask::after {
+        content: attr(data-full);
+        position: absolute;
+        left: 0;
+        background: #fff;
+        border: 1px solid #ccc;
+        padding: 2px 6px;
+        border-radius: 4px;
+        white-space: nowrap;
+        visibility: hidden;
+        opacity: 0;
+        transform: translateY(-100%);
+        transition: opacity 0.2s ease;
+        z-index: 10;
+    }
+
+    .account-number-mask:hover::after {
+        visibility: visible;
+        opacity: 1;
+    }
