@@ -90,7 +90,15 @@ namespace GuardianCapitalLLC.Controllers
                 return RedirectToAction("Index", new { Id = UserId });
             }
 
-            fromAccount.Balance -= amount;
+            const decimal internalTransferFee = 5.00m;
+
+            if (fromAccount.Balance < amount + internalTransferFee)
+            {
+                ModelState.AddModelError(string.Empty, $"Insufficient funds (transfer + ${internalTransferFee} fee).");
+                return RedirectToAction("Index", new { Id = UserId });
+            }
+
+            fromAccount.Balance -= (amount + internalTransferFee);
             toAccount.Balance += amount;
 
             _context.Transactions.AddRange(new[]
@@ -110,6 +118,16 @@ namespace GuardianCapitalLLC.Controllers
                     Description = $"Transfer from {fromAccount.Type} account",
                     BankAccountId = toAccount.Id,
                     UserId = user.Id
+                },
+                new Transaction
+                {
+                    Amount = internalTransferFee,
+                    Type = TransactionType.ServiceFee,
+                    Description = "Internal Transfer Fee",
+                    BankAccountId = fromAccount.Id,
+                    UserId = user.Id,
+                    Date = DateTime.UtcNow,
+                    Purpose = PurposeType.Other
                 }
             });
 

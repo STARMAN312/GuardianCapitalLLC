@@ -672,7 +672,7 @@ namespace GuardianCapitalLLC.Controllers
                 return View("TransferFundsToInternalAccount", model);
             }
 
-            fromAccount.Balance -= model.Amount;
+            fromAccount.Balance -= (model.Amount + internalTransferFee);
             toAccount.Balance += model.Amount;
 
             _context.Transactions.AddRange(new[]
