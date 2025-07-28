@@ -191,4 +191,35 @@ public class MailJetService
 
         return true;
     }
+
+    public async Task<bool> SendExternalTransfer(string to, string datetime)
+    {
+        var apiKeyPublic = _mailJetPublicKey;
+        var apiKeyPrivate = _mailJetPrivateKey;
+        var fromEmail = _configuration["Mailjet:FromEmail"];
+        var fromName = _configuration["Mailjet:FromName"];
+        long templateId = 7189749;
+
+        MailjetClient client = new MailjetClient(apiKeyPublic, apiKeyPrivate);
+
+        MailjetRequest request = new MailjetRequest
+        {
+            Resource = Send.Resource
+        };
+
+        var email = new TransactionalEmailBuilder()
+            .WithTemplateId(templateId)
+            .WithTo(new SendContact(to, to))
+            .WithTemplateLanguage(true)
+            .WithVariables(new Dictionary<string, object>
+                {
+                    { "datetime", datetime },
+                }
+            )
+            .Build();
+
+        var response = await client.SendTransactionalEmailAsync(email);
+
+        return true;
+    }
 }

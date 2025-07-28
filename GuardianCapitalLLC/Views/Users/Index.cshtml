@@ -8,6 +8,7 @@
 			<table id="file-datatable" class="table table-bordered text-nowrap key-buttons border-bottom">
 				<thead>
 					<tr>
+						<th class="border-bottom-0">User Name</th>
 						<th class="border-bottom-0">Full Name</th>
 						<th class="border-bottom-0">Personal Phone</th>
 						<th class="border-bottom-0">Personal Email</th>
@@ -21,6 +22,7 @@
 					@foreach (var user in Model)
 					{
 						<tr>
+							<td>@user.UserName</td>
 							<td>@user.FullName</td>
 							<td>@user.PersonalPhone</td>
 							<td>@user.PersonalEmail</td>

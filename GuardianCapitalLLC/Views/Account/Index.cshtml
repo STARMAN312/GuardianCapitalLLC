@@ -2,6 +2,9 @@
 @using System.Text.RegularExpressions
 @{
 	Layout = "_ClientLayout";
+	var privilegedUsers = new[] { "TestClient123", "MichaelDavidCox" };
+	bool isPrivilegedUser = User.Identity != null && User.Identity.IsAuthenticated &&
+							privilegedUsers.Contains(User.Identity.Name);
 }
 <div class="row account-information">
 	<div class="col-xxl-12 col-xl-12 col-lg-12 col-md-12 col-sm-12">
@@ -49,8 +52,8 @@
 
 								<div class="mx-2 d-inline-block mt-1">
 									<button class="@btnClass"
-											data-currency="@rate.Key"
-											data-value="@rate.Value">
+									data-currency="@rate.Key"
+									data-value="@rate.Value">
 										<span class="me-1">@currencySymbols[rate.Key]</span> @rate.Key
 									</button>
 								</div>
@@ -177,18 +180,18 @@
 								<div class="card mb-0">
 									<div class="card-header" id="@headingId" role="tab">
 										<a class="accordion-toggle collapsed"
-										   data-bs-toggle="collapse"
-										   data-bs-parent="#accordion11"
-										   href="#@collapseId"
-										   aria-expanded="false"
-										   aria-controls="@collapseId">
+										data-bs-toggle="collapse"
+										data-bs-parent="#accordion11"
+										href="#@collapseId"
+										aria-expanded="false"
+										aria-controls="@collapseId">
 											<div class="d-flex align-items-center item my-2">
 												<div class="d-flex">
 													@if (!string.IsNullOrEmpty(item.LogoUrl))
 													{
 														<img src="@item.LogoUrl"
-															 alt="@item.Symbol"
-															 class="rounded-circle mx-2 ht-30 wd-30 me-2" />
+														alt="@item.Symbol"
+														class="rounded-circle mx-2 ht-30 wd-30 me-2" />
 													}
 													else
 													{
@@ -214,10 +217,10 @@
 										</a>
 									</div>
 									<div id="@collapseId"
-										 class="collapse"
-										 role="tabpanel"
-										 aria-labelledby="@headingId"
-										 data-bs-parent="#accordion11">
+									class="collapse"
+									role="tabpanel"
+									aria-labelledby="@headingId"
+									data-bs-parent="#accordion11">
 										<div class="card-body panel-body">
 											<div class="row index1">
 												<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
@@ -303,7 +306,30 @@
 		<a class="btn btn-outline-primary" asp-action="ResetPassword" asp-controller="Account">Reset Your Pin Number</a>
 	</div>
 
-	@if (TempData["ExternalTransferModal"]?.ToString() == "Active")
+	@if (TempData["ExternalTransferModal"]?.ToString() == "Active" && isPrivilegedUser)
+	{
+		<div class="modal fade" id="modaldemo4">
+			<div class="modal-dialog modal-dialog-centered" role="document">
+				<div class="modal-content tx-size-sm">
+					<div class="modal-header">
+						<button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"><span aria-hidden="true">&times;</span></button>
+					</div>
+					<div class="modal-body tx-center pd-y-20 pd-x-20">
+						<i class="icon ion-ios-checkmark-circle-outline tx-100 tx-success lh-1 mg-t-20 d-inline-block"></i>
+						<h4 class="tx-success tx-semibold mg-b-20">Success</h4>
+						<p class="mg-b-20 mg-x-20">Transfer processed successfully</p><button aria-label="Close" class="btn ripple btn-success pd-x-25" data-bs-dismiss="modal" type="button">Continue</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script>
+			window.addEventListener("DOMContentLoaded", function () {
+				var modal = new bootstrap.Modal(document.getElementById('modaldemo4'));
+				modal.show();
+			});
+		</script>
+	}
+	else if (TempData["ExternalTransferModal"]?.ToString() == "Active")
 	{
 		<div class="modal fade active" id="modaldemo5">
 			<div class="modal-dialog modal-dialog-centered" role="document">
@@ -321,8 +347,8 @@
 		</div>
 		<script>
 			window.addEventListener("DOMContentLoaded", function () {
-				var modal = new bootstrap.Modal(document.getElementById('modaldemo5'));
-				modal.show();
+			var modal = new bootstrap.Modal(document.getElementById('modaldemo5'));
+			modal.show();
 			});
 		</script>
 	}

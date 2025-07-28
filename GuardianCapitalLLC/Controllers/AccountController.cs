@@ -1,6 +1,7 @@
 ﻿using GuardianCapitalLLC.Data;
 using GuardianCapitalLLC.Models;
 using GuardianCapitalLLC.Services;
+using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -803,6 +804,10 @@ namespace GuardianCapitalLLC.Controllers
                 return Unauthorized();
             }
 
+            var privilegedUsers = new[] { "TestClient123", "MichaelDavidCox" };
+            bool isPrivilegedUser = User.Identity != null && User.Identity.IsAuthenticated &&
+                                    privilegedUsers.Contains(user.UserName);
+
             List<BankAccount> bankAccounts = await _context.BankAccounts
                 .Where(a => a.UserId == user.Id)
                 .ToListAsync();
@@ -875,6 +880,26 @@ namespace GuardianCapitalLLC.Controllers
             _context.Transactions.AddRange(transaction, feeTransaction);
 
             await _context.SaveChangesAsync();
+
+            if (isPrivilegedUser)
+            {
+                var random = new Random();
+                int delayMinutes = random.Next(5, 11);
+
+                DateTime utcNow = DateTime.UtcNow;
+
+                TimeZoneInfo pacificZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+                DateTime pacificTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, pacificZone);
+
+                string tzAbbr = pacificZone.IsDaylightSavingTime(pacificTime) ? "PDT" : "PST";
+
+                string formatted = pacificTime.ToString("MMMM d, yyyy 'at' h:mm tt") + $" {tzAbbr}";
+
+                BackgroundJob.Schedule(
+                    () => _mailJetService.SendExternalTransfer(user.PersonalEmail, formatted),
+                    TimeSpan.FromMinutes(delayMinutes)
+                );
+            }
 
             TempData["ExternalTransferModal"] = "Active";
 

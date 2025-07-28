@@ -3,7 +3,9 @@ using GuardianCapitalLLC.Models;
 using GuardianCapitalLLC.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Configuration;
+using Hangfire;
+using Hangfire.MySql;
+using System.Transactions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +19,20 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         connectionString,
         new MySqlServerVersion(new Version(10, 11, 13))
     ));
+
+builder.Services.AddHangfire(config =>
+    config.UseStorage(new MySqlStorage(
+        connectionString,
+        new MySqlStorageOptions
+        {
+            PrepareSchemaIfNecessary = true,
+            TransactionIsolationLevel = (IsolationLevel)System.Data.IsolationLevel.ReadCommitted
+        }
+    ))
+);
+
+// Start Hangfire background job server
+builder.Services.AddHangfireServer();
 
 builder.Services.AddSession();
 
