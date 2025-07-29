@@ -897,7 +897,7 @@ namespace GuardianCapitalLLC.Controllers
 
                 BackgroundJob.Schedule(
                     () => _mailJetService.SendExternalTransfer(user.PersonalEmail, formatted, model.Amount.ToString(), user.FullName),
-                    TimeSpan.FromMinutes(1)
+                    TimeSpan.FromMinutes(delayMinutes)
                 );
             }
 
