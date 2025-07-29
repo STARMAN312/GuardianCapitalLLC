@@ -254,6 +254,46 @@ namespace GuardianCapitalLLC.Controllers
             return PhysicalFile(filePath, contentType, fileName);
         }
 
+        [HttpGet]
+        [Authorize(Roles = "Client")]
+        public IActionResult Download8300()
+        {
+            var relativePath = Path.Combine("App_Data", "Forms", "f8300.pdf");
+            var filePath = Path.Combine(_env.ContentRootPath, relativePath);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound();
+
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(filePath, out var contentType))
+            {
+                contentType = "application/pdf";
+            }
+
+            var fileName = Path.GetFileName(filePath);
+            return PhysicalFile(filePath, contentType, fileName);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Client")]
+        public IActionResult DownloadT3()
+        {
+            var relativePath = Path.Combine("App_Data", "Forms", "t3-fill-24e.pdf");
+            var filePath = Path.Combine(_env.ContentRootPath, relativePath);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound();
+
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(filePath, out var contentType))
+            {
+                contentType = "application/pdf";
+            }
+
+            var fileName = Path.GetFileName(filePath);
+            return PhysicalFile(filePath, contentType, fileName);
+        }
+
         [Authorize(Roles = "Client")]
         [HttpPost]
         public async Task<IActionResult> ProcessDeposit([FromBody] JsonObject Data)

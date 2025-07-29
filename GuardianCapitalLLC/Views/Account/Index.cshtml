@@ -317,15 +317,6 @@
 			</div>
 		</div>
 	}
-	@if (!Model.IsBanned)
-	{
-		<div class="text-end mt-4">
-			<a class="btn btn-outline-primary" asp-action="PrintProfile" asp-controller="Account">🖨️ Print User Profile</a>
-		</div>
-		<div class="text-end mt-4">
-			<a class="btn btn-outline-primary" asp-action="ResetPassword" asp-controller="Account">Reset Your Pin Number</a>
-		</div>
-	}
 
 	@if (TempData["ExternalTransferModal"]?.ToString() == "Active" && isPrivilegedUser)
 	{
@@ -397,6 +388,19 @@
 		</script>
 	}
 </div>
+@if (!Model.IsBanned)
+{
+	<div class="d-flex flex-row justify-content-between mt-4 account-information">
+		<div>
+			<a class="btn btn-outline-primary" asp-action="PrintProfile" asp-controller="Account">🖨️ Print User Profile</a>
+			<a class="btn btn-outline-primary" asp-action="ResetPassword" asp-controller="Account">Reset Your Pin Number</a>
+		</div>
+		<div>
+			<a class="btn btn-outline-primary" asp-action="Download8300" asp-controller="Account">Download Form 8300</a>
+			<a class="btn btn-outline-primary" asp-action="DownloadT3" asp-controller="Account">Download T3 Tax Form</a>
+		</div>
+	</div>
+}
 
 <script>
 
