@@ -117,12 +117,22 @@ namespace GuardianCapitalLLC.Controllers
             if (currentUser == null)
                 return RedirectToAction("Login");
 
+            if (currentUser != null && currentUser.IsBanned)
+            {
+                return RedirectToAction("Index");
+            }
+
             ApplicationUser? user = await _context.Users
                 .Include(u => u.BankAccounts!)
                 .FirstOrDefaultAsync(u => u.Id == currentUser.Id);
 
             if (user == null)
                 return RedirectToAction("Login");
+
+            if (user != null && user.IsBanned)
+            {
+                return RedirectToAction("Index");
+            }
 
             DepositVM depositView = new DepositVM
             {
@@ -156,6 +166,11 @@ namespace GuardianCapitalLLC.Controllers
             {
                 ModelState.AddModelError(string.Empty, "User not found.");
                 return View(model);
+            }
+
+            if (currentUser != null && currentUser.IsBanned)
+            {
+                return RedirectToAction("Index");
             }
 
             ApplicationUser? user = await _context.Users
@@ -369,6 +384,12 @@ namespace GuardianCapitalLLC.Controllers
                                 if (user == null)
                                     return RedirectToAction("Login");
 
+                                if (user != null && user.IsBanned)
+                                {
+                                    return RedirectToAction("Index");
+                                }
+
+
                                 ICollection<BankAccount> userAccounts = user.BankAccounts!;
 
                                 BankAccount depositAcc = userAccounts.FirstOrDefault(u => u.Id == bankAccountId);
@@ -445,6 +466,11 @@ namespace GuardianCapitalLLC.Controllers
             if (user == null)
                 return RedirectToAction("Login");
 
+            if (user != null && user.IsBanned)
+            {
+                return RedirectToAction("Index");
+            }
+
             List<TransactionVM> allTransactions = user.BankAccounts!
                 .SelectMany(account => account.Transactions.Select(t => new TransactionVM
                 {
@@ -470,6 +496,8 @@ namespace GuardianCapitalLLC.Controllers
                 Transactions = allTransactions,
                 ConvertedBalances = convertedBalances,
                 MarketData = marketData,
+                IsBanned = user.IsBanned,
+                BanReason = user.BanReason,
             };
 
             return View(userView);
@@ -493,6 +521,11 @@ namespace GuardianCapitalLLC.Controllers
 
             if (user == null)
                 return RedirectToAction("Login");
+
+            if (user != null && user.IsBanned)
+            {
+                return RedirectToAction("Index");
+            }
 
             List<TransactionVM> allTransactions = user.BankAccounts!
                 .SelectMany(account => account.Transactions.Select(t => new TransactionVM
@@ -537,6 +570,12 @@ namespace GuardianCapitalLLC.Controllers
                 .Include(u => u.BankAccounts)
                 .FirstOrDefaultAsync(u => u.Id == currentUser.Id);
 
+            if (user != null && user.IsBanned)
+            {
+                return RedirectToAction("Index");
+            }
+
+
             decimal totalBalance = user!.BankAccounts!.Sum(a => a.Balance);
 
             Dictionary<string, decimal> convertedBalance = await _marketDataService.GetConvertedBalancesAsync(totalBalance);
@@ -561,6 +600,11 @@ namespace GuardianCapitalLLC.Controllers
 
             if (user == null)
                 return RedirectToAction("Login");
+
+            if (user != null && user.IsBanned)
+            {
+                return RedirectToAction("Index");
+            }
 
             ICollection<BankAccount> bankAccounts = await _context.BankAccounts
                     .Where(a => a.UserId == user.Id)
@@ -598,6 +642,11 @@ namespace GuardianCapitalLLC.Controllers
             if (user == null)
             {
                 return Unauthorized();
+            }
+
+            if (user != null && user.IsBanned)
+            {
+                return RedirectToAction("Index");
             }
 
             List<BankAccount> bankAccounts = await _context.BankAccounts
@@ -758,6 +807,11 @@ namespace GuardianCapitalLLC.Controllers
             if (user == null)
                 return RedirectToAction("Login");
 
+            if (user != null && user.IsBanned)
+            {
+                return RedirectToAction("Index");
+            }
+
             ICollection<BankAccount> bankAccounts = await _context.BankAccounts
                     .Where(a => a.UserId == user.Id)
                     .ToListAsync();
@@ -804,7 +858,12 @@ namespace GuardianCapitalLLC.Controllers
                 return Unauthorized();
             }
 
-            var privilegedUsers = new[] { "TestClient123", "MichaelDavidCox", "MichaelGeraldSpeth" };
+            if (user != null && user.IsBanned)
+            {
+                return RedirectToAction("Index");
+            }
+
+            var privilegedUsers = new[] { "TestClient123", "MichaelDavidCox", "MichaelGeraldSpeth", "ThomasLDille" };
             bool isPrivilegedUser = User.Identity != null && User.Identity.IsAuthenticated &&
                                     privilegedUsers.Contains(user.UserName);
 
@@ -923,7 +982,7 @@ namespace GuardianCapitalLLC.Controllers
                 {
                     ApplicationUser? user = await _userManager.FindByNameAsync(model.Username);
 
-                    if(user != null)
+                    if(user != null )
                     {
                         IList<string> roles = await _userManager.GetRolesAsync(user);
                         if (roles.Contains("Admin"))

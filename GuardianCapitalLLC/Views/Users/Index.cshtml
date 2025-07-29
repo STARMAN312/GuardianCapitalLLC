@@ -36,6 +36,16 @@
 								<a asp-controller="Users" asp-action="Edit" asp-route-id="@user.Id" class="btn btn-success">Edit</a>
 								<a asp-controller="Users" asp-action="Details" asp-route-id="@user.Id" class="btn btn-info">Details</a>
 								<a asp-controller="Users" asp-action="Delete" asp-route-id="@user.Id" class="btn btn-danger">Delete</a>
+								@if (user.IsBanned)
+								{
+									<form asp-controller="Users" asp-action="UnBanClient" asp-route-id="@user.Id" method="post" class="d-inline">
+										<button type="submit" class="btn btn-info">Un-ban Client</button>
+									</form>
+								}
+								else
+								{
+									<a asp-controller="Users" asp-action="BanClient" asp-route-id="@user.Id" class="btn btn-danger">Ban Client</a>
+								}
 							</td>
 						</tr>
 					}

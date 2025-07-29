@@ -1,0 +1,33 @@
+﻿@model BanUserVM
+
+<div class="mt-2">
+	<div class="card bg-gray-200 bd-0">
+		<div class="card-body">
+			<h5 class="tx-dark tx-medium mg-b-10">Ban user @Model.UserName</h5>
+			<form asp-action="BanClient">
+				@if (!ViewData.ModelState.IsValid)
+				{
+					<div class="card bg-warning text-white">
+						<div class="card-body d-flex align-items-center p-3">
+							<i class="fas fa-exclamation-circle me-2"></i>
+							<div asp-validation-summary="ModelOnly" class="validation-summary-no-bullets flex-grow-1"></div>
+						</div>
+					</div>
+				}
+				<input type="hidden" asp-for="Id" />
+				<div>
+					<div class="form-group">
+						<label for="InputID" class="form-label" id="usernameLabel">Reason for ban</label>
+						<input asp-for="BanReason" type="text" class="form-control">
+					</div>
+				</div>
+				<div class="form-group mb-0 mt-3 justify-content-end">
+					<div>
+						<button type="submit" class="btn btn-danger px-5">Ban Client</button>
+						<button asp-controller="Users" asp-action="Index" class="btn btn-info ms-4 px-5">Cancel</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>

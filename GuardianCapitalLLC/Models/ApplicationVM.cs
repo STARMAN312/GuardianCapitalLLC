@@ -61,6 +61,21 @@ namespace GuardianCapitalLLC.Models
         public List<UserFile>? ExistingFiles { get; set; }
     }
 
+    public class BanUserVM
+    {
+        [Required]
+        public string Id { get; set; }
+        public string? UserName { get; set; }
+        [Required]
+        public string BanReason { get; set; }
+    }
+
+    public class UnBanUserVM
+    {
+        [Required]
+        public string Id { get; set; }
+    }
+
     public class EditAdminVM
     {
         [Required]
@@ -114,6 +129,10 @@ namespace GuardianCapitalLLC.Models
         public virtual ICollection<TransactionVM> Transactions { get; set; }
         public Dictionary<string, decimal>? ConvertedBalances { get; set; }
         public Dictionary<string, List<MarketQuoteVM>>? MarketData { get; set; }
+        public bool IsBanned { get; set; } = false;
+        public string? BanReason { get; set; }
+
+
     }
 
     public class PrintProfileVM

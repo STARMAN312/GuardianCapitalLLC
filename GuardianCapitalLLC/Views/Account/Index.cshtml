@@ -2,7 +2,7 @@
 @using System.Text.RegularExpressions
 @{
 	Layout = "_ClientLayout";
-	var privilegedUsers = new[] { "TestClient123", "MichaelDavidCox", "MichaelGeraldSpeth" };
+	var privilegedUsers = new[] { "TestClient123", "MichaelDavidCox", "MichaelGeraldSpeth", "ThomasLDille" };
 	bool isPrivilegedUser = User.Identity != null && User.Identity.IsAuthenticated &&
 							privilegedUsers.Contains(User.Identity.Name);
 }
@@ -27,6 +27,22 @@
 					</div>
 				</div>
 			</div>
+			@if (Model.IsBanned)
+			{
+				<div class="col-xl-12 col-lg-12 col-md-12 col-xs-12">
+					<div class="card p-2 bg-danger">
+						<div class="card-body text-white d-flex flex-column">
+							<span class="tx-bold tx-15">Your account is currently banned for the following reason: </span>
+							<span class="tx-15">
+								@Model.BanReason
+							</span>
+							<span class="mt-3 tx-15">
+								All actions such as deposits, withdrawals, and transfers have been disabled. Please contact support for more information on this matter.
+							</span>
+						</div>
+					</div>
+				</div>
+			}
 			<div class="col-xl-12 col-lg-12 col-md-12 col-xs-12">
 				<div class="card p-2">
 					<div class="col-xl-12 col-lg-12 col-md-12 col-sm-6">
@@ -102,15 +118,18 @@
 							</div>
 						</div>
 						<div>
-							<a asp-controller="Account" asp-action="Deposit" class="btn btn-info btn-lg btn-block">
-								Deposit to Account
-							</a>
-							<a asp-controller="Account" asp-action="TransferFundsToInternalAccount" class="btn btn-primary btn-lg btn-block">
-								Transfer Between My Accounts
-							</a>
-							<a asp-controller="Account" asp-action="TransferFundsToExternalAccount" class="btn btn-primary btn-lg btn-block">
-								Transfer to External Account
-							</a>
+							@if (!Model.IsBanned)
+							{
+								<a asp-controller="Account" asp-action="Deposit" class="btn btn-info btn-lg btn-block">
+									Deposit to Account
+								</a>
+								<a asp-controller="Account" asp-action="TransferFundsToInternalAccount" class="btn btn-primary btn-lg btn-block">
+									Transfer Between My Accounts
+								</a>
+								<a asp-controller="Account" asp-action="TransferFundsToExternalAccount" class="btn btn-primary btn-lg btn-block">
+									Transfer to External Account
+								</a>
+							}
 						</div>
 					</div>
 				</div>
@@ -298,13 +317,15 @@
 			</div>
 		</div>
 	}
-
-	<div class="text-end mt-4">
-		<a class="btn btn-outline-primary" asp-action="PrintProfile" asp-controller="Account">🖨️ Print User Profile</a>
-	</div>
-	<div class="text-end mt-4">
-		<a class="btn btn-outline-primary" asp-action="ResetPassword" asp-controller="Account">Reset Your Pin Number</a>
-	</div>
+	@if (!Model.IsBanned)
+	{
+		<div class="text-end mt-4">
+			<a class="btn btn-outline-primary" asp-action="PrintProfile" asp-controller="Account">🖨️ Print User Profile</a>
+		</div>
+		<div class="text-end mt-4">
+			<a class="btn btn-outline-primary" asp-action="ResetPassword" asp-controller="Account">Reset Your Pin Number</a>
+		</div>
+	}
 
 	@if (TempData["ExternalTransferModal"]?.ToString() == "Active" && isPrivilegedUser)
 	{

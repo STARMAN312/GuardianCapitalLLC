@@ -480,5 +480,59 @@ namespace GuardianCapitalLLC.Controllers
         {
             return View();
         }
+
+        public async Task<IActionResult> BanClient(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            var model = new BanUserVM
+            {
+                Id = user.Id,
+                UserName = user.FullName
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BanClient(BanUserVM model)
+        {
+            if(model.BanReason == null)
+            {
+                ModelState.AddModelError(string.Empty, "Please fill in all required fields.");
+            }
+
+            if (!ModelState.IsValid) return View(model);
+
+            var user = await _userManager.FindByIdAsync(model.Id);
+            if (user == null) return NotFound();
+
+            user.IsBanned = true;
+            user.BanReason = model.BanReason;
+
+            await _userManager.UpdateAsync(user);
+            TempData["NotificationMessage"] = "User has been banned.";
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UnBanClient(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            user.IsBanned = false;
+            user.BanReason = null;
+
+            await _userManager.UpdateAsync(user);
+            TempData["NotificationMessage"] = "User has been unbanned.";
+
+            return RedirectToAction("Index"); // Adjust this redirect as needed
+        }
+
     }
 }
