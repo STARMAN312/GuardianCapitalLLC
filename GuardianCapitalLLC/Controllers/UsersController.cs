@@ -39,6 +39,34 @@ namespace GuardianCapitalLLC.Controllers
         }
 
         [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> TransactionDetails(string id)
+        {
+
+            var transaction = await _context.Transactions
+                .Include(t => t.BankAccount)
+                .Include(t => t.User)
+                .FirstOrDefaultAsync(t => t.Id.ToString() == id);
+
+            if (transaction == null) return NotFound();
+
+            var viewModel = new TransactionDetailsVM
+            {
+                Id = transaction.Id,
+                Amount = transaction.Amount,
+                Type = transaction.Type.ToString(),
+                Description = transaction.Description,
+                Recipient = transaction.Recipient,
+                Purpose = transaction.Purpose?.ToString(),
+                ToAccountNumber = transaction.ToAccountNumber,
+                Date = transaction.Date,
+                AccountNumber = transaction.BankAccount?.AccountNumber,
+                UserName = transaction.User?.UserName
+            };
+
+            return View(viewModel);
+        }
+
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(string id)
         {
             ApplicationUser? user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
@@ -79,6 +107,7 @@ namespace GuardianCapitalLLC.Controllers
             List<TransactionVM> allTransactions = user.BankAccounts!
                 .SelectMany(account => account.Transactions.Select(t => new TransactionVM
                 {
+                    Id = t.Id,
                     AccountName = account.Type.ToString(),
                     Type = t.Type,
                     Amount = t.Amount,

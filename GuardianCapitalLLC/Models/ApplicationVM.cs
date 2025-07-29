@@ -75,6 +75,7 @@ namespace GuardianCapitalLLC.Models
 
     public class TransactionVM
     {
+        public int Id { get; set; }
         public decimal Amount { get; set; }
         public TransactionType Type { get; set; }
         public string Description { get; set; }
@@ -251,6 +252,26 @@ namespace GuardianCapitalLLC.Models
         public string? CompanyName { get; set; }
         public string? LogoUrl { get; set; }
 
+    }
+
+    public class TransactionDetailsVM
+    {
+        public int Id { get; set; }
+        public decimal Amount { get; set; }
+        public string Type { get; set; }
+        public string? Description { get; set; }
+        public string? Recipient { get; set; }
+        public string? Purpose { get; set; }
+        public string? ToAccountNumber { get; set; }
+        public DateTime Date { get; set; }
+        public string FormattedDate => Date.ToLocalTime().ToString("f");
+
+        // Optional Audit Info
+        public string? AccountNumber { get; set; }
+        public string? UserName { get; set; }
+
+        // Convenience properties
+        public bool IsTransfer => Type == nameof(TransactionType.ExternalTransfer) || Type == nameof(TransactionType.WireTransfer);
     }
 
 }

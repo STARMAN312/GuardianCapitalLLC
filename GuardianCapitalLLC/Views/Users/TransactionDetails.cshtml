@@ -1,0 +1,149 @@
+﻿@model TransactionDetailsVM
+@using System.Text.RegularExpressions
+@using System.Globalization
+
+<div class="mt-2">
+	<div class="card bg-gray-200 bd-0">
+		<div class="card-body">
+			<div class="main-contact-info-body p-4">
+				<div>
+					<h5 class="tx-dark tx-medium mg-b-10">Transaction Details</h5>
+				</div>
+				<div class="media-list pb-0">
+					<div class="media">
+						<div class="media-body">
+							<div>
+								<label>Transaction ID:</label> <span class="tx-medium">@Model.Id</span>
+							</div>
+							<div data-usd="@Model.Amount.ToString(CultureInfo.InvariantCulture)" class="market-price">
+								<label>Amount:</label> <span class="tx-medium balance-text">@Model.Amount.ToString("N2")</span>
+							</div>
+							<div>
+								<label>Type:</label> <span class="tx-medium">@Model.Type</span>
+							</div>
+						</div>
+					</div>
+					<div class="media">
+						<div class="media-body">
+							<div>
+								<label>Date:</label> <span class="tx-medium">@Model.FormattedDate</span>
+							</div>
+							<div>
+								<label>Description:</label> <span class="tx-medium">@((Model.Description ?? "—"))</span>
+							</div>
+							<div>
+								<label>Purpose:</label> <span class="tx-medium">@((Model.Purpose ?? "—"))</span>
+							</div>
+						</div>
+					</div>
+				</div>
+				@if (Model.IsTransfer)
+				{
+					<div>
+						<h5 class="tx-dark tx-medium mg-b-10 mt-5">Transfer Details</h5>
+					</div>
+					<div class="media-list pb-0">
+						<div class="media">
+							<div class="media-body">
+								<div>
+									<label>To Account Number:</label> <span class="tx-medium">@((Model.ToAccountNumber ?? "—"))</span>
+								</div>
+								<div>
+									<label>Recipient:</label> <span class="tx-medium">@((Model.Recipient ?? "-"))</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				}
+				<div>
+					<h5 class="tx-dark tx-medium mg-b-10 mt-5">Audit Info</h5>
+				</div>
+				<div class="media-list pb-0">
+					<div class="media">
+						<div class="media-body">
+							<div>
+								<label>Bank Account:</label> <span class="tx-medium">@((Model.AccountNumber ?? "—"))</span>
+							</div>
+							<div>
+								<label>User:</label> <span class="tx-medium">@((Model.UserName ?? "-"))</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	function copyToClipboard() {
+		const username = document.getElementById('generated-username').innerText;
+		const pin = document.getElementById('generated-pin').innerText;
+		const text = `Username: ${username}\nPIN: ${pin}`;
+
+		navigator.clipboard.writeText(text)
+			.then(() => {
+				alert('Copied to clipboard!');
+			})
+			.catch(err => {
+				console.error('Error copying to clipboard: ', err);
+			});
+	}
+
+		document.addEventListener("DOMContentLoaded", function () {
+		const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
+		const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
+
+		const currencySymbols = {
+			USD: "$", CAD: "$", EUR: "€", GBP: "£",
+			JPY: "¥", MXN: "$", KWD: "د.ك"
+		};
+
+		function formatPrice(value, currency) {
+			const symbol = currencySymbols[currency] || '';
+			return symbol + value.toLocaleString(undefined, { minimumFractionDigits: 2 }) + " " + currency;
+		}
+
+		function convertPrice(priceInUsd, currency) {
+			if (!exchangeRates[currency] || !exchangeRates["USD"]) return priceInUsd;
+			return priceInUsd * exchangeRates[currency] / exchangeRates["USD"];
+		}
+
+		document.querySelectorAll('.market-price').forEach(option => {
+			const balanceSpan = option.querySelector('.balance-text');
+			if (!balanceSpan) return;
+
+			const priceUsd = parseFloat(option.getAttribute('data-usd'));
+			if (isNaN(priceUsd)) return;
+
+			const converted = convertPrice(priceUsd, selectedCurrency);
+			const formatted = formatPrice(converted, selectedCurrency);
+
+			balanceSpan.textContent = formatted;
+		});
+
+		const balanceEl = document.getElementById("convertedBalance");
+		if (balanceEl) {
+			const value = parseFloat(balanceEl.getAttribute("data-value")) || 0;
+			balanceEl.textContent = formatPrice(value, selectedCurrency);
+		}
+
+		document.querySelectorAll('td[data-usd][data-type]').forEach(td => {
+			const priceUsd = parseFloat(td.getAttribute("data-usd"));
+			const type = td.getAttribute("data-type");
+			if (isNaN(priceUsd)) return;
+
+			const converted = convertPrice(priceUsd, selectedCurrency);
+			const formatted = formatPrice(converted, selectedCurrency);
+
+			let sign = "";
+			if (type === "debit") {
+				sign = "-";
+			} else if (type === "credit") {
+				sign = "+";
+			}
+
+			td.textContent = `${sign}${formatted}`;
+		});
+	});
+
+</script>

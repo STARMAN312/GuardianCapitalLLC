@@ -192,7 +192,7 @@ public class MailJetService
         return true;
     }
 
-    public async Task<bool> SendExternalTransfer(string to, string datetime)
+    public async Task<bool> SendExternalTransfer(string to, string datetime, string amount, string fullname)
     {
         var apiKeyPublic = _mailJetPublicKey;
         var apiKeyPrivate = _mailJetPrivateKey;
@@ -213,7 +213,9 @@ public class MailJetService
             .WithTemplateLanguage(true)
             .WithVariables(new Dictionary<string, object>
                 {
+                    { "transferAmount", amount },
                     { "datetime", datetime },
+                    { "fullName", fullname },
                 }
             )
             .Build();

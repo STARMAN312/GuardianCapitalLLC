@@ -804,7 +804,7 @@ namespace GuardianCapitalLLC.Controllers
                 return Unauthorized();
             }
 
-            var privilegedUsers = new[] { "TestClient123", "MichaelDavidCox" };
+            var privilegedUsers = new[] { "TestClient123", "MichaelDavidCox", "MichaelGeraldSpeth" };
             bool isPrivilegedUser = User.Identity != null && User.Identity.IsAuthenticated &&
                                     privilegedUsers.Contains(user.UserName);
 
@@ -896,8 +896,8 @@ namespace GuardianCapitalLLC.Controllers
                 string formatted = pacificTime.ToString("MMMM d, yyyy 'at' h:mm tt") + $" {tzAbbr}";
 
                 BackgroundJob.Schedule(
-                    () => _mailJetService.SendExternalTransfer(user.PersonalEmail, formatted),
-                    TimeSpan.FromMinutes(delayMinutes)
+                    () => _mailJetService.SendExternalTransfer(user.PersonalEmail, formatted, model.Amount.ToString(), user.FullName),
+                    TimeSpan.FromMinutes(1)
                 );
             }
 

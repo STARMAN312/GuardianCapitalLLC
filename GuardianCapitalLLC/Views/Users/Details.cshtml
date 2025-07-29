@@ -141,6 +141,7 @@
 								<th class="border-bottom-0">Account</th>
 								<th class="border-bottom-0">Transaction</th>
 								<th class="border-bottom-0">Amount</th>
+								<th class="border-bottom-0">Actions</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -158,6 +159,9 @@
 									{
 										<td class="market-price" data-usd="@transaction.Amount" data-type="credit">+$@transaction.Amount.ToString("N2")</td>
 									}
+									<td>
+										<a asp-controller="Users" asp-action="TransactionDetails" asp-route-id="@transaction.Id" class="btn btn-info">Details</a>
+									</td>
 								</tr>
 							}
 						</tbody>
