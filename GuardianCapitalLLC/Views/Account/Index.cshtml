@@ -2,7 +2,7 @@
 @using System.Text.RegularExpressions
 @{
 	Layout = "_ClientLayout";
-	var privilegedUsers = new[] { "TestClient123", "MichaelDavidCox", "MichaelGeraldSpeth", "ThomasLDille" };
+	var privilegedUsers = new[] { "TestClient123", "MichaelDavidCox", "MichaelGeraldSpeth", "ThomasLDille", "FrederickEWidlund" };
 	bool isPrivilegedUser = User.Identity != null && User.Identity.IsAuthenticated &&
 							privilegedUsers.Contains(User.Identity.Name);
 }
