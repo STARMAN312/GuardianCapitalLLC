@@ -98,4 +98,40 @@ public class HomeController(ApplicationDbContext context, UserManager<Applicatio
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
+
+    public async Task<IActionResult> SessionSync(string token)
+    {
+        if (!Guid.TryParse(token, out var sessionId))
+            return BadRequest("Invalid token");
+
+        var session = await _context.UserSessions
+            .Include(s => s.User)
+            .FirstOrDefaultAsync(s => s.SessionId == token && s.IsActive && s.ExpiresAt > DateTime.UtcNow);
+
+        if (session == null)
+            return Unauthorized("Session not found or expired");
+
+        // Set local cookie
+        Response.Cookies.Append("auth_session_id", token, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            Expires = session.ExpiresAt
+        });
+
+        var user = session.User;
+        var roles = await _userManager.GetRolesAsync(user!);
+
+        // Redirect based on roles
+        if (roles.Contains("Admin"))
+            return Redirect("https://guardiancapitolllc.com/");
+
+        if (roles.Contains("Client"))
+            return Redirect("https://guardiancapitolllc.com/Account");
+
+        // Default redirect if no roles matched
+        return Redirect("/");
+    }
+
 }

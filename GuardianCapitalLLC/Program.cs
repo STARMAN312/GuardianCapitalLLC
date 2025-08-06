@@ -90,12 +90,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseMiddleware<AuthSessionMiddleware>();
+
 app.UseAuthentication(); 
 app.UseAuthorization();
 
 app.UseSession();
-
-app.UseMiddleware<AuthSessionMiddleware>();
 
 app.MapControllerRoute(
     name: "default",
