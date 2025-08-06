@@ -58,13 +58,7 @@ namespace GuardianCapitalLLC.Services
                 }
                 else
                 {
-                    if (context.User.Identity!.IsAuthenticated)
-                    {
-                        await context.SignOutAsync(IdentityConstants.ApplicationScheme);
-                        context.User = new ClaimsPrincipal(new ClaimsIdentity());       
-                    }
-
-                    context.Response.Cookies.Delete("auth_session_id");
+                    context.Response.Redirect("/Account/Logout");
                 }
             }
 

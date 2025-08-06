@@ -125,10 +125,10 @@ public class HomeController(ApplicationDbContext context, UserManager<Applicatio
 
         // Redirect based on roles
         if (roles.Contains("Admin"))
-            return Redirect("https://guardiancapitolllc.com/");
+            return Redirect("https://site1.localhost:7264/");
 
         if (roles.Contains("Client"))
-            return Redirect("https://guardiancapitolllc.com/Account");
+            return Redirect("https://site1.localhost:7264/Account");
 
         // Default redirect if no roles matched
         return Redirect("/");

