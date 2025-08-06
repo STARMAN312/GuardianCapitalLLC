@@ -56,6 +56,16 @@ namespace GuardianCapitalLLC.Services
                         context.User = principal;
                     }
                 }
+                else
+                {
+                    if (context.User.Identity?.IsAuthenticated ?? false)
+                    {
+                        await context.SignOutAsync(IdentityConstants.ApplicationScheme);
+                        context.User = new ClaimsPrincipal(new ClaimsIdentity());       
+                    }
+
+                    context.Response.Cookies.Delete("auth_session_id");
+                }
             }
 
             await _next(context);
