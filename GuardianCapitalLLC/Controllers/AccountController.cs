@@ -7,12 +7,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
-using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security.Principal;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -489,7 +486,7 @@ namespace GuardianCapitalLLC.Controllers
             return new JsonResult("error");
         }
 
-         [Authorize(Roles = "Client")]
+        [Authorize(Roles = "Client")]
         public async Task<IActionResult> Index()
         {
 
@@ -1005,6 +1002,7 @@ namespace GuardianCapitalLLC.Controllers
             return RedirectToAction("Index");
         }
 
+        //LoginKey
         public IActionResult Login()
         {
             return View();
@@ -1022,7 +1020,26 @@ namespace GuardianCapitalLLC.Controllers
                 {
                     ApplicationUser? user = await _userManager.FindByNameAsync(model.Username);
 
-                    if(user != null )
+                    var session = new UserSession
+                    {
+                        UserId = user.Id,
+                        ExpiresAt = DateTime.UtcNow.AddHours(12),
+                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        UserAgent = HttpContext.Request.Headers["User-Agent"].ToString(),
+                    };
+
+                    _context.UserSessions.Add(session);
+                    await _context.SaveChangesAsync();
+
+                    Response.Cookies.Append("auth_session_id", session.SessionId.ToString(), new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Lax,
+                        Expires = session.ExpiresAt
+                    });
+
+                    if (user != null )
                     {
                         IList<string> roles = await _userManager.GetRolesAsync(user);
                         if (roles.Contains("Admin"))
@@ -1053,6 +1070,20 @@ namespace GuardianCapitalLLC.Controllers
         public async Task<ActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
+
+            var sessionId = Request.Cookies["auth_session_id"];
+            if (Guid.TryParse(sessionId, out var id))
+            {
+                var session = await _context.UserSessions.FirstOrDefaultAsync(s => s.SessionId == id.ToString());
+                if (session != null)
+                {
+                    session.IsActive = false;
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            Response.Cookies.Delete("auth_session_id");
+
             return RedirectToAction("Login", "Account");
         }
 

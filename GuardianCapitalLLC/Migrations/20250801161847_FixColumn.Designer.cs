@@ -4,6 +4,7 @@ using GuardianCapitalLLC.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GuardianCapitalLLC.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250801161847_FixColumn")]
+    partial class FixColumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -251,11 +254,9 @@ namespace GuardianCapitalLLC.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.HasKey("SessionId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("UserSessions");
                 });
@@ -449,17 +450,6 @@ namespace GuardianCapitalLLC.Migrations
                 });
 
             modelBuilder.Entity("GuardianCapitalLLC.Models.UserFile", b =>
-                {
-                    b.HasOne("GuardianCapitalLLC.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("GuardianCapitalLLC.Models.UserSession", b =>
                 {
                     b.HasOne("GuardianCapitalLLC.Models.ApplicationUser", "User")
                         .WithMany()

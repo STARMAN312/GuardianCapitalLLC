@@ -61,7 +61,7 @@
 									@if (User.IsInRole("Client") && ViewBag.Hide != true)
 									{
 										<div class="justify-content-center mt-2">
-											<a asp-controller="Account" asp-action="Logout" class="btn btn-danger">Log Out</a>
+											<a href="#" id="logout-link" class="btn btn-danger">Log Out</a>
 										</div>
 									}
 								</li>
@@ -167,6 +167,30 @@
 		</div>
 	</div>
 	<!-- End Page -->
+
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<script>
+		document.getElementById("logout-link").addEventListener("click", function (e) {
+			e.preventDefault();
+
+			Swal.fire({
+					title: 'Are you sure you want to log out?',
+					icon: 'warning',
+					showCancelButton: true,
+					confirmButtonText: 'Yes, log out',
+					cancelButtonText: 'Cancel',
+					customClass: {
+						popup: 'account-information',
+						cancelButton: 'btn btn-primary text-white',
+						confirmButton: 'btn btn-danger text-white'
+					}
+			}).then((result) => {
+				if (result.isConfirmed) {
+					window.location.href = '/Account/Logout';
+				}
+			});
+		});
+	</script>
 
 	<!-- JQuery min js -->
 	<script src="~/plugins/jquery/jquery.min.js"></script>

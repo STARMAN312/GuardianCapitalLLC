@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using Hangfire.MySql;
 using System.Transactions;
+using Auth0.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -93,6 +94,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseSession();
+
+app.UseMiddleware<AuthSessionMiddleware>();
 
 app.MapControllerRoute(
     name: "default",

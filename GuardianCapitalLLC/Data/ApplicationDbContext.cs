@@ -1,6 +1,7 @@
 ﻿using GuardianCapitalLLC.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace GuardianCapitalLLC.Data
 {
@@ -15,6 +16,8 @@ namespace GuardianCapitalLLC.Data
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<FailedLoginLog> FailedLoginLog { get; set; }
         public DbSet<UserFile> UserFiles { get; set; }
+        public DbSet<ContactForm> ContactForms { get; set; }
+        public DbSet<UserSession> UserSessions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -37,6 +40,12 @@ namespace GuardianCapitalLLC.Data
                 .WithMany()
                 .HasForeignKey(t => t.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<UserSession>()
+                .HasOne(s => s.User)
+                .WithMany()
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 
