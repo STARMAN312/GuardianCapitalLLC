@@ -900,7 +900,7 @@ namespace GuardianCapitalLLC.Controllers
                 return RedirectToAction("Index");
             }
 
-            var privilegedUsers = new[] { "TestClient123", "MichaelDavidCox", "MichaelGeraldSpeth", "ThomasLDille", "FrederickEWidlund" };
+            var privilegedUsers = new[] { "TestClient123", "MichaelDavidCox", "ThomasLDille", "FrederickEWidlund" };
             bool isPrivilegedUser = User.Identity != null && User.Identity.IsAuthenticated &&
                                     privilegedUsers.Contains(user.UserName);
 
