@@ -6,6 +6,18 @@
 	Layout = "_ClientLayout";
 }
 
+<nav aria-label="breadcrumb">
+	<ol class="breadcrumb breadcrumb-style mg-b-0">
+		<li class="breadcrumb-item">
+			<a>Guardian Capital</a>
+		</li>
+		<li class="breadcrumb-item">
+			<a asp-controller="Account" asp-action="Index">Account</a>
+		</li>
+		<li class="breadcrumb-item active">Transfer funds to internal account</li>
+	</ol>
+</nav>
+
 <div class="mt-2 account-information">
 	<div class="card bg-gray-200 bd-0">
 		<div class="card-body">
@@ -63,7 +75,7 @@
 				</div>
 
 				<div class="modal-footer">
-					<a asp-controller="Account" asp-action="Index" class="btn btn-outline-dark ms-4 px-5">Cancel</a>
+					<a asp-controller="Account" asp-action="Index" class="btn btn-outline-dark ms-lg-4 px-5 ms-0">Cancel</a>
 					<button type="submit" class="btn btn-info px-5">Review Transfer</button>
 				</div>
 			</form>

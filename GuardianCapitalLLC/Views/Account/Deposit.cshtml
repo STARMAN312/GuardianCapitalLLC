@@ -6,6 +6,19 @@
 	Layout = "_ClientLayout";
 }
 
+
+<nav aria-label="breadcrumb">
+	<ol class="breadcrumb breadcrumb-style mg-b-0">
+		<li class="breadcrumb-item">
+			<a>Guardian Capital</a>
+		</li>
+		<li class="breadcrumb-item">
+			<a asp-controller="Account" asp-action="Index">Account</a>
+		</li>
+		<li class="breadcrumb-item active">Deposit</li>
+	</ol>
+</nav>
+
 <div class="mt-2 account-information">
 	<div class="card bg-gray-200 bd-0">
 		<div class="card-body mb-2">
@@ -22,7 +35,7 @@
 				 } 
 				<div class="media mt-0">
 					<span class="me-3 bg-info-transparent text-info transaction-icon">
-						<i class="fas fa-exchange-alt"></i>
+						<i class="fas fa-dollar-sign"></i>
 					</span>
 					<div class="media-body">
 						<div class="d-flex align-items-center">

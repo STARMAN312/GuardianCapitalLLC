@@ -32,6 +32,8 @@ builder.Services.AddHangfire(config =>
     ))
 );
 
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
+
 // Start Hangfire background job server
 builder.Services.AddHangfireServer();
 

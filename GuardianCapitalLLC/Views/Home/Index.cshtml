@@ -18,7 +18,7 @@
 </div>
 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 px-0 mt-2">
 	<div class="card px-3 ps-4">
-		<div class="col-xl-12 col-lg-12 col-md-12 col-sm-6">
+		<div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
 			<div class="d-flex flex-wrap justify-content-center gap-2 border p-3 br-5 align-items-center mt-2">
 				<div class="mx-2 d-inline-block">
 					<span class="tx-18 text-dark">Currency: </span>
@@ -220,7 +220,11 @@
 												}
 												else
 												{
-													<div class="avatar bg-info rounded-circle align-items-center justify-content-center mx-2">
+													<img src="~/img/@(item.Symbol.ToLower().Trim().Replace(" ", "").Replace(":", "")).png"
+														 alt="@item.Symbol"
+														 class="rounded-circle mx-2 ht-30 wd-30 me-2"
+														 onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+													<div class="avatar bg-info rounded-circle align-items-center justify-content-center mx-2" style="display: none;">
 														@item.Symbol?[0]
 													</div>
 												}
@@ -231,7 +235,6 @@
 											</div>
 											<div class="ms-auto my-auto">
 												<div class="d-flex">
-													<span class="me-4 mt-1 font-weight-semibold tx-16 market-price" data-usd="@item.Current">@item.Current?.ToString("N2")</span>
 													<span class="@colorClass fs-13 my-auto">
 														<i class="fe @arrowIcon @colorClass mx-2 my-auto"></i>
 														@percent.ToString("N2")%
@@ -252,7 +255,28 @@
 												<div class="row border-end bd-xs-e-0 p-3">
 													<div class="col-3 d-flex align-items-center justify-content-center">
 														<div class="circle-icon bg-primary text-center align-self-center overflow-hidden shadow">
-															<i class="fe fe-shopping-bag tx-15 text-white"></i>
+															<i class="fas fa-dollar-sign tx-15 text-white"></i>
+														</div>
+													</div>
+													<div class="col-9 py-0">
+														<div class="pt-4 pb-3">
+															<div class="d-flex">
+																<h6 class="mb-2 tx-12">Current price</h6>
+															</div>
+															<div class="pb-0 mt-0">
+																<div class="d-flex">
+																	<h4 class="tx-18 font-weight-semibold mb-0 market-price" data-usd="@item.Current">@item.Current?.ToString("N2")</h4>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+											<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
+												<div class="row border-end bd-xs-e-0 p-3">
+													<div class="col-3 d-flex align-items-center justify-content-center">
+														<div class="circle-icon bg-info text-center align-self-center overflow-hidden shadow">
+															<i class="fas fa-exchange-alt tx-15 text-white"></i>
 														</div>
 													</div>
 													<div class="col-9 py-0">
@@ -272,8 +296,8 @@
 											<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
 												<div class="row border-end bd-xs-e-0  p-3">
 													<div class="col-3 d-flex align-items-center justify-content-center">
-														<div class="circle-icon bg-secondary text-center align-self-center overflow-hidden shadow">
-															<i class="fe fe-external-link tx-15 text-white"></i>
+														<div class="circle-icon bg-success text-center align-self-center overflow-hidden shadow">
+															<i class="mdi mdi-chevron-double-up tx-15 text-white"></i>
 														</div>
 													</div>
 													<div class="col-9">
@@ -293,8 +317,8 @@
 											<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-3">
 												<div class="row  p-3">
 													<div class="col-3 d-flex align-items-center justify-content-center">
-														<div class="circle-icon bg-info text-center align-self-center overflow-hidden shadow">
-															<i class="fe fe-credit-card tx-15 text-white"></i>
+														<div class="circle-icon bg-danger text-center align-self-center overflow-hidden shadow">
+															<i class="mdi mdi-chevron-double-down tx-15 text-white"></i>
 														</div>
 													</div>
 													<div class="col-9">

@@ -69,86 +69,8 @@
 						</div>
 					</div>
 					<!-- /breadcrumb -->
-					@if (ViewBag.HideBanner != true)
-					{
-						<div class="banner">
-							<div class="geometric-shapes">
-								<div class="shape"></div>
-								<div class="shape"></div>
-								<div class="shape"></div>
-							</div>
-
-							<div class="content">
-								<h1 class="main-heading">Timely Information</h1>
-								<h2 class="sub-heading">About Your Investments</h2>
-							</div>
-						</div>
-					}
-					<nav aria-label="breadcrumb">
-						<ol class="breadcrumb breadcrumb-style mg-b-0">
-							<li class="breadcrumb-item">
-								<a>Guardian Capital</a>
-							</li>
-							@if (User.IsInRole("Client"))
-							{
-								<li class="breadcrumb-item">
-									<a asp-controller="Account" asp-action="Index">Account</a>
-								</li>
-							}
-							else
-							{
-								<li class="breadcrumb-item">
-									<a>Account</a>
-								</li>
-								<li class="breadcrumb-item active">Log In</li>
-							}
-
-						</ol>
-					</nav>
+					
 					@RenderBody()
-					@if (ViewBag.HideBanner != true)
-					{
-						<div class="accent-line2 mt-5"></div>
-						<div class="row row-sm contact-info">
-							<div class="col-sm-12 col-md-12 col-lg-4 col-xl-4">
-								<div class="card bg-gray-400 bd-0">
-									<div class="card-body text-muted">
-										<h5 class="card-title text-dark tx-medium mg-b-10">Vancouver Office</h5>
-										<p class="card-subtitle mg-b-15 mt-3">Marine Building</p>
-										<p class="card-subtitle mg-b-15">355 Burrard Street • Suite 1610</p>
-										<p class="card-subtitle mg-b-15">Vancouver, BC V6C 2GB</p>
-										<p class="card-subtitle mg-b-15 mt-3">E: <span class="text-dark">vancouver@guardiancapital.com</span></p>
-										<p class="card-subtitle mg-b-15">T: <span class="text-dark">1-877-704-2430</span></p>
-									</div>
-								</div>
-							</div>
-							<div class="col-sm-12 col-md-12 col-lg-4 col-xl-4">
-								<div class="card bg-gray-400 bd-0">
-									<div class="card-body text-muted">
-										<h5 class="card-title text-dark tx-medium mg-b-10">Calgary Office</h5>
-										<p class="card-subtitle mg-b-15 mt-3">Bentall Kennedy Building</p>
-										<p class="card-subtitle mg-b-15">1030 - 640 5th Avenue S.W.</p>
-										<p class="card-subtitle mg-b-15">Calgary, AB T2P 3G4</p>
-										<p class="card-subtitle mg-b-15 mt-3">E: <span class="text-dark">calgary@guardiancapital.com</span></p>
-										<p class="card-subtitle mg-b-15">T: <span class="text-dark">1-877-704-2430</span></p>
-									</div>
-								</div>
-							</div>
-							<div class="col-sm-12 col-md-12 col-lg-4 col-xl-4">
-								<div class="card bg-gray-400 bd-0">
-									<div class="card-body text-muted">
-										<h5 class="card-title text-dark tx-medium mg-b-10">Toronto Office</h5>
-										<p class="card-subtitle mg-b-15 mt-3">Commerce Court West</p>
-										<p class="card-subtitle mg-b-15">199 Bay Street • Suite 3100</p>
-										<p class="card-subtitle mg-b-15">PO Box 201 • Toronto, Ontario. M5L 1E8</p>
-										<p class="card-subtitle mg-b-15 mt-3">E: <span class="text-dark">toronto@guardiancapital.com</span></p>
-										<p class="card-subtitle mg-b-15">T: <span class="text-dark">1-877-704-2430</span></p>
-										<p class="card-subtitle mg-b-15">T: <span class="text-dark">437-886-2825</span></p>
-									</div>
-								</div>
-							</div>
-						</div>
-					}
 				</div>
 			</div>
 			<!-- Footer opened -->

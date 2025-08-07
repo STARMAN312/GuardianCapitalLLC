@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
@@ -31,6 +32,7 @@ namespace GuardianCapitalLLC.Controllers
         private readonly MailJetService _mailJetService;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IWebHostEnvironment _env;
+        private readonly string _frontendBaseUrl;
 
         public AccountController(
             SignInManager<ApplicationUser> signInManager,
@@ -42,7 +44,8 @@ namespace GuardianCapitalLLC.Controllers
             IConfiguration configuration, 
             MailJetService mailJetService, 
             IHttpClientFactory httpClientFactory,
-            IWebHostEnvironment env
+            IWebHostEnvironment env,
+            IOptions<AppSettings> options
             )
         {
             _context = context;
@@ -58,7 +61,7 @@ namespace GuardianCapitalLLC.Controllers
             _mailJetService = mailJetService;
             _httpClientFactory = httpClientFactory;
             _env = env;
-
+            _frontendBaseUrl = options.Value.FrontendBaseUrl;
         }
 
         [Authorize(Roles = "Client")]
@@ -1039,7 +1042,8 @@ namespace GuardianCapitalLLC.Controllers
                         Expires = session.ExpiresAt
                     });
 
-                    return Redirect($"https://maximustitlellc.onrender.com/Home/SessionSync?token={session.SessionId}");
+                    var redirectUrl = $"{_frontendBaseUrl}/Home/SessionSync?token={session.SessionId}";
+                    return Redirect(redirectUrl);
                 }
                 else
                 {

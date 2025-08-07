@@ -3,6 +3,30 @@
 	Layout = "_ClientLayout";
 }
 
+<div class="banner">
+	<div class="geometric-shapes">
+		<div class="shape"></div>
+		<div class="shape"></div>
+		<div class="shape"></div>
+	</div>
+
+	<div class="content">
+		<h1 class="main-heading">Timely Information</h1>
+		<h2 class="sub-heading">About Your Investments</h2>
+	</div>
+</div>
+<nav aria-label="breadcrumb">
+	<ol class="breadcrumb breadcrumb-style mg-b-0">
+		<li class="breadcrumb-item">
+			<a>Guardian Capital</a>
+		</li>
+		<li class="breadcrumb-item">
+			<a>Account</a>
+		</li>
+		<li class="breadcrumb-item active">Log In</li>
+	</ol>
+</nav>
+
 @if (!ViewData.ModelState.IsValid)
 {
 	<div class="card bg-warning text-white mt-5">
@@ -13,11 +37,16 @@
 	</div>
 }
 
-<div class="d-flex flex-row justify-content-between">
+<div class="d-flex flex-column flex-lg-row justify-content-between mb-3 mb-lg-0">
 	<h3 class="text-primary">Private Wealth Clients</h3>
-	<a class="btn btn-dark" href="https://video.goldco.com/tom-selleck-gold-silver-kit-g-042125/?cq_net=%7Bnetwork%7D&cq_plac=%7Bplacement%7D&cq_plt=gdp&cq_term=%7Bkeyword%7D&gad_campaignid=22633263768&gad_source=2&gclid=Cj0KCQjws4fEBhD-ARIsACC3d2-ThJQ0aEBV_BBoWJ6T-aRaCBDV_cLNi_CEfphx-ddPjh2K7vwiKpQaAtprEALw_wcB&ls=001-Video-Youtube-Internal&sfcid=701Qh00000Xbb5e&utm_campaign=701Qh00000Xbb5e&utm_medium=Video&utm_medium=cpc&utm_source=Youtube-Internal&utm_source=google&utm_term=" target="_blank">
-		<img src="~/img/75f068f3-white-goldco-logo-gold-flame_106g02g06e02g000000000.png" alt="GoldCo Logo" style="height: 32px; width: auto;">
-	</a>
+	<div>
+		<a class="btn btn-dark" href="https://video.goldco.com/tom-selleck-gold-silver-kit-g-042125/?cq_net=%7Bnetwork%7D&cq_plac=%7Bplacement%7D&cq_plt=gdp&cq_term=%7Bkeyword%7D&gad_campaignid=22633263768&gad_source=2&gclid=Cj0KCQjws4fEBhD-ARIsACC3d2-ThJQ0aEBV_BBoWJ6T-aRaCBDV_cLNi_CEfphx-ddPjh2K7vwiKpQaAtprEALw_wcB&ls=001-Video-Youtube-Internal&sfcid=701Qh00000Xbb5e&utm_campaign=701Qh00000Xbb5e&utm_medium=Video&utm_medium=cpc&utm_source=Youtube-Internal&utm_source=google&utm_term=" target="_blank">
+			<img src="~/img/75f068f3-white-goldco-logo-gold-flame_106g02g06e02g000000000.png" alt="GoldCo Logo" style="height: 32px; width: auto;">
+		</a>
+		<a class="btn" href="https://maximustitlellc.com" style="background-color:#1c3464">
+			<img src="~/img/maximustitle.png" alt="Maximus Title Logo" style="height: 32px; width: auto;">
+		</a>
+	</div>
 </div>
 <div class="row row-sm form-styles">
 	<div class="col-lg-6 col-xl-6 col-md-12 col-sm-12">
@@ -40,7 +69,7 @@
 			</div>
 			<div class="row row-xs align-items-center mg-b-20">
 				<div class="col-md-4">
-					<button type="submit" class="btn btn-info px-5" value="Login">LOGIN</button>
+					<button type="submit" class="btn btn-info px-5 d-block d-lg-inline-block w-100 w-lg-auto" value="Login">LOGIN</button>
 				</div>
 				<div class="col-md-8 mg-t-5 mg-md-t-0">
 					<span class="forgot-password text-info">FORGOT YOUR PASSWORD?</span>
@@ -53,6 +82,47 @@
 	<a asp-controller="Account" asp-action="DownloadClientPdf" class="btn btn-primary btn-lg btn-block mt-5">
 		View our clients
 	</a>
+</div>
+
+<div class="accent-line2 mt-5"></div>
+<div class="row row-sm contact-info">
+	<div class="col-sm-12 col-md-12 col-lg-4 col-xl-4">
+		<div class="card bg-gray-400 bd-0">
+			<div class="card-body text-muted">
+				<h5 class="card-title text-dark tx-medium mg-b-10">Vancouver Office</h5>
+				<p class="card-subtitle mg-b-15 mt-3">Marine Building</p>
+				<p class="card-subtitle mg-b-15">355 Burrard Street • Suite 1610</p>
+				<p class="card-subtitle mg-b-15">Vancouver, BC V6C 2GB</p>
+				<p class="card-subtitle mg-b-15 mt-3">E: <span class="text-dark">vancouver@guardiancapital.com</span></p>
+				<p class="card-subtitle mg-b-15">T: <span class="text-dark">1-877-704-2430</span></p>
+			</div>
+		</div>
+	</div>
+	<div class="col-sm-12 col-md-12 col-lg-4 col-xl-4">
+		<div class="card bg-gray-400 bd-0">
+			<div class="card-body text-muted">
+				<h5 class="card-title text-dark tx-medium mg-b-10">Calgary Office</h5>
+				<p class="card-subtitle mg-b-15 mt-3">Bentall Kennedy Building</p>
+				<p class="card-subtitle mg-b-15">1030 - 640 5th Avenue S.W.</p>
+				<p class="card-subtitle mg-b-15">Calgary, AB T2P 3G4</p>
+				<p class="card-subtitle mg-b-15 mt-3">E: <span class="text-dark">calgary@guardiancapital.com</span></p>
+				<p class="card-subtitle mg-b-15">T: <span class="text-dark">1-877-704-2430</span></p>
+			</div>
+		</div>
+	</div>
+	<div class="col-sm-12 col-md-12 col-lg-4 col-xl-4">
+		<div class="card bg-gray-400 bd-0">
+			<div class="card-body text-muted">
+				<h5 class="card-title text-dark tx-medium mg-b-10">Toronto Office</h5>
+				<p class="card-subtitle mg-b-15 mt-3">Commerce Court West</p>
+				<p class="card-subtitle mg-b-15">199 Bay Street • Suite 3100</p>
+				<p class="card-subtitle mg-b-15">PO Box 201 • Toronto, Ontario. M5L 1E8</p>
+				<p class="card-subtitle mg-b-15 mt-3">E: <span class="text-dark">toronto@guardiancapital.com</span></p>
+				<p class="card-subtitle mg-b-15">T: <span class="text-dark">1-877-704-2430</span></p>
+				<p class="card-subtitle mg-b-15">T: <span class="text-dark">437-886-2825</span></p>
+			</div>
+		</div>
+	</div>
 </div>
 
 <script>

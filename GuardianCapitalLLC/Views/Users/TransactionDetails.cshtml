@@ -2,6 +2,10 @@
 @using System.Text.RegularExpressions
 @using System.Globalization
 
+@{
+	var returnUrl = Context.Request.Query["returnUrl"].ToString();
+}
+
 <div class="mt-2">
 	<div class="card bg-gray-200 bd-0">
 		<div class="card-body">
@@ -70,6 +74,16 @@
 						</div>
 					</div>
 				</div>
+				@if (!string.IsNullOrEmpty(returnUrl))
+				{
+					<div class="media-list pb-0">
+						<div class="media">
+							<div class="media-body">
+								<a href="@returnUrl" class="btn btn-primary">Go Back</a>
+							</div>
+						</div>
+					</div>
+				}
 			</div>
 		</div>
 	</div>

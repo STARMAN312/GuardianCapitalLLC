@@ -73,10 +73,10 @@
 						</div>
 					</div>
 				</div>
-				<div class="mt-5 d-flex flex-row justify-content-between">
-					<a asp-controller="BankAccount" asp-action="Index" asp-route-id="@Model.Id" class="btn btn-info">Manage Bank Accounts</a>
+				<div class="mt-5 d-flex flex-column flex-lg-row justify-content-between">
+					<a asp-controller="BankAccount" asp-action="Index" asp-route-id="@Model.Id" asp-route-returnUrl="@Url.Action("Details", "Users", new { id = Model.Id })" class="btn btn-info">Manage Bank Accounts</a>
 
-					<form asp-controller="Users" asp-action="GenerateNewPassword" asp-route-id="@Model.Id" method="post" class="d-inline">
+					<form asp-controller="Users" asp-action="GenerateNewPassword" asp-route-id="@Model.Id" method="post" class="d-inline mt-2 mt-lg-0">
 						@Html.AntiForgeryToken()
 
 						<input type="text" name="customPassword" class="form-control d-inline w-auto me-2" placeholder="Optional custom password" />
@@ -160,7 +160,7 @@
 										<td class="market-price" data-usd="@transaction.Amount" data-type="credit">+$@transaction.Amount.ToString("N2")</td>
 									}
 									<td>
-										<a asp-controller="Users" asp-action="TransactionDetails" asp-route-id="@transaction.Id" class="btn btn-info">Details</a>
+										<a asp-controller="Users" asp-action="TransactionDetails" asp-route-id="@transaction.Id" asp-route-returnUrl="@Url.Action("Details", "Users", new { id = Model.Id })" class="btn btn-info">Details</a>
 									</td>
 								</tr>
 							}
