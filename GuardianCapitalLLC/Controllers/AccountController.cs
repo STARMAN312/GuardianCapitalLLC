@@ -194,7 +194,19 @@ namespace GuardianCapitalLLC.Controllers
 
                     if (model.NewPassword != model.NewPasswordConfirm)
                     {
-                        ModelState.AddModelError(string.Empty, "New pins do not match.");
+                        ModelState.AddModelError(string.Empty, "New passwords do not match.");
+                        return View(model);
+                    }
+
+                    if (string.IsNullOrWhiteSpace(model.NewPassword) ||
+                        model.NewPassword.Length < 8 ||
+                        !model.NewPassword.Any(char.IsLower) ||
+                        !model.NewPassword.Any(char.IsUpper) ||
+                        !model.NewPassword.Any(char.IsDigit) ||
+                        !model.NewPassword.Any(c => !char.IsLetterOrDigit(c))
+                    )
+                    {
+                        ModelState.AddModelError(string.Empty, "Password must be at least 8 characters long and include at least one lowercase letter, one uppercase letter, one number, and one special character.");
                         return View(model);
                     }
 
@@ -214,7 +226,7 @@ namespace GuardianCapitalLLC.Controllers
                     {
                         Amount = fee,
                         Type = TransactionType.ServiceFee,
-                        Description = "Internal Pin Change Fee",
+                        Description = "Password Change Fee",
                         BankAccountId = account.Id,
                         UserId = user.Id,
                         Date = DateTime.UtcNow,
