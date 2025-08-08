@@ -58,7 +58,10 @@ namespace GuardianCapitalLLC.Services
                 }
                 else
                 {
+                    context.Response.Cookies.Delete("auth_session_id");
+
                     context.Response.Redirect("/Account/Logout");
+                    return;
                 }
             }
 
