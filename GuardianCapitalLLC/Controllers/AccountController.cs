@@ -357,11 +357,6 @@ namespace GuardianCapitalLLC.Controllers
             if (user == null)
                 return RedirectToAction("Login");
 
-            if (user != null && user.IsBanned)
-            {
-                return RedirectToAction("Index");
-            }
-
             var latestTransactions = user.BankAccounts!
                 .SelectMany(account => account.Transactions.Select(t => new TransactionVM
                 {
