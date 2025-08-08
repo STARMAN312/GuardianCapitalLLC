@@ -1,6 +1,7 @@
 ﻿@model AccountViewVM
 @using System.Text.RegularExpressions
 @{
+	ViewData["Title"] = "Guardian Capital - Account";
 	Layout = "_ClientLayout";
 	var privilegedUsers = new[] { "TestClient123", "MichaelDavidCox", "MichaelGeraldSpeth", "ThomasLDille", "FrederickEWidlund" };
 	bool isPrivilegedUser = User.Identity != null && User.Identity.IsAuthenticated &&
@@ -202,6 +203,63 @@
 					</div>
 				</div>
 			</div>
+			@* <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12"> *@
+			@* 	<div class="card px-3 ps-4"> *@
+			@* 		<div class="row index1"> *@
+			@* 			@foreach (TransactionVM transaction in Model.Transactions) *@
+			@* 			{ *@
+			@* 				<div class="col-xl-12 col-lg-12 col-md-12 col-sm-12"> *@
+			@* 					<a href="#" class="row p-3 bd-y"> *@
+			@* 						<div class="col-3 d-flex align-items-center justify-content-center"> *@
+			@* 							@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal") *@
+			@* 							{ *@
+			@* 								<div class="circle-icon bg-warning text-center align-self-center overflow-hidden shadow"> *@
+			@* 									<i class="fa fa-angle-double-up tx-15 text-white"></i> *@
+			@* 								</div> *@
+			@* 							} *@
+			@* 							else if (transaction.Type.ToString() == "ServiceFee") *@
+			@* 							{ *@
+			@* 								<div class="circle-icon bg-info text-center align-self-center overflow-hidden shadow"> *@
+			@* 									<i class="fa fa-cogs tx-15 text-white"></i> *@
+			@* 								</div> *@
+			@* 							} *@
+			@* 							else *@
+			@* 							{ *@
+			@* 								<div class="circle-icon bg-success text-center align-self-center overflow-hidden shadow"> *@
+			@* 									<i class="fa fa-angle-double-down tx-15 text-white"></i> *@
+			@* 								</div> *@
+			@* 							} *@
+			@* 						</div> *@
+			@* 						<div class="col-9"> *@
+			@* 							<div class="pt-4 pb-3"> *@
+			@* 								<div class="d-flex	tx-15"> *@
+			@* 									<h6 class="mb-2">@Regex.Replace(transaction.AccountName, "(\\B[A-Z])", " $1") - @transaction.Date.ToLocalTime().ToString("MM-dd-yyyy HH:mm tt")</h6> *@
+			@* 									@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal" || transaction.Type.ToString() == "ServiceFee") *@
+			@* 									{ *@
+			@* 										<span class="font-weight-semibold ms-auto rounded-pill lh-maincard px-2 my-auto market-price" data-usd="@transaction.Amount" data-type="debit"> *@
+			@* 											-$@transaction.Amount.ToString("N2") *@
+			@* 										</span> *@
+			@* 									} *@
+			@* 									else *@
+			@* 									{ *@
+			@* 										<span class="font-weight-semibold ms-auto rounded-pill lh-maincard px-2 my-auto market-price" data-usd="@transaction.Amount" data-type="credit"> *@
+			@* 											+$@transaction.Amount.ToString("N2") *@
+			@* 										</span> *@
+			@* 									} *@
+			@* 								</div> *@
+			@* 								<div class="pb-0 mt-0"> *@
+			@* 									<div class="d-flex"> *@
+			@* 										<h4 class="tx-18 font-weight-semibold mb-0">@Regex.Replace(transaction.Type.ToString(), "(\\B[A-Z])", " $1")</h4> *@
+			@* 									</div> *@
+			@* 								</div> *@
+			@* 							</div> *@
+			@* 						</div> *@
+			@* 					</a> *@
+			@* 				</div> *@
+			@* 			} *@
+			@* 		</div> *@
+			@* 	</div> *@
+			@* </div> *@
 		</div>
 	</div>
 	@if (Model.MarketData != null)

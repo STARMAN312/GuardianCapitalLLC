@@ -135,6 +135,19 @@ namespace GuardianCapitalLLC.Models
 
     }
 
+    public class BalanceVM
+    {
+        public List<TransactionVM> LatestTransactions { get; set; } = new();
+        public decimal MonthlyInterestEarnings { get; set; }
+        public decimal TotalBalance { get; set; }
+        public decimal SavingsBalance { get; set; }
+    }
+
+    public class ActivityVM
+    {
+        public List<TransactionVM> Transactions { get; set; } = new();
+    }
+
     public class PrintProfileVM
     {
         public string FullName { get; set; }

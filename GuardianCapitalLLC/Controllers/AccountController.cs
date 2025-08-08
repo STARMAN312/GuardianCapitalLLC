@@ -2,6 +2,7 @@
 using GuardianCapitalLLC.Models;
 using GuardianCapitalLLC.Services;
 using Hangfire;
+using Mailjet.Client.Resources;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -141,169 +142,6 @@ namespace GuardianCapitalLLC.Controllers
 
             ViewBag.PaypalClientId = _PaypalClientId;
             return View(depositView);
-        }
-
-        [Authorize(Roles = "Client")]
-        public IActionResult ResetPassword()
-        {
-            ViewBag.HideBanner = true;
-
-            return View();
-        }
-
-        [Authorize(Roles = "Client")]
-        [HttpPost]
-        public async Task<IActionResult> ResetPassword(ResetPasswordVM model)
-        {
-
-            ViewBag.HideBanner = true;
-
-            if (!ModelState.IsValid)
-                return View(model);
-
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
-            {
-                ModelState.AddModelError(string.Empty, "User not found.");
-                return View(model);
-            }
-
-            if (currentUser != null && currentUser.IsBanned)
-            {
-                return RedirectToAction("Index");
-            }
-
-            ApplicationUser? user = await _context.Users
-                .Include(u => u.BankAccounts!)
-                .ThenInclude(a => a.Transactions)
-                .FirstOrDefaultAsync(u => u.Id == currentUser.Id);
-
-            const decimal fee = 5.00m;
-
-            var orderedAccounts = user.BankAccounts
-                .OrderBy(a =>
-                    a.Type == BankAccount.AccountType.Checking ? 0 :
-                    a.Type == BankAccount.AccountType.Savings ? 1 :
-                    a.Type == BankAccount.AccountType.TrustFund ? 2 : 3)
-                .ToList();
-
-            foreach (var account in orderedAccounts)
-            {
-                if (account.Balance >= fee)
-                {
-
-                    if (model.NewPassword != model.NewPasswordConfirm)
-                    {
-                        ModelState.AddModelError(string.Empty, "New passwords do not match.");
-                        return View(model);
-                    }
-
-                    if (string.IsNullOrWhiteSpace(model.NewPassword) ||
-                        model.NewPassword.Length < 8 ||
-                        !model.NewPassword.Any(char.IsLower) ||
-                        !model.NewPassword.Any(char.IsUpper) ||
-                        !model.NewPassword.Any(char.IsDigit) ||
-                        !model.NewPassword.Any(c => !char.IsLetterOrDigit(c))
-                    )
-                    {
-                        ModelState.AddModelError(string.Empty, "Password must be at least 8 characters long and include at least one lowercase letter, one uppercase letter, one number, and one special character.");
-                        return View(model);
-                    }
-
-                    var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
-                    if (!result.Succeeded)
-                    {
-                        foreach (var error in result.Errors)
-                        {
-                            ModelState.AddModelError(string.Empty, error.Description);
-                        }
-                        return View(model);
-                    }
-
-                    account.Balance -= fee;
-
-                    account.Transactions.Add(new Transaction
-                    {
-                        Amount = fee,
-                        Type = TransactionType.ServiceFee,
-                        Description = "Password Change Fee",
-                        BankAccountId = account.Id,
-                        UserId = user.Id,
-                        Date = DateTime.UtcNow,
-                        Purpose = PurposeType.Other
-                    });
-
-                    await _context.SaveChangesAsync();
-
-                    await _mailJetService.SendUpdatedCredentials(user.PersonalEmail, user.UserName, model.NewPassword);
-
-                    return RedirectToAction("Index");
-
-                }
-            }
-
-            ModelState.AddModelError(string.Empty, $"Insufficient funds (${fee} USD fee).");
-            return View("ResetPassword", model);
-
-        }
-
-        [HttpGet]
-        public IActionResult DownloadClientPdf()
-        {
-            var relativePath = Path.Combine("App_Data", "OurClients", "Guardian Capitol - Clients.pdf");
-            var filePath = Path.Combine(_env.ContentRootPath, relativePath);
-
-            if (!System.IO.File.Exists(filePath))
-                return NotFound();
-
-            var provider = new FileExtensionContentTypeProvider();
-            if (!provider.TryGetContentType(filePath, out var contentType))
-            {
-                contentType = "application/pdf";
-            }
-
-            var fileName = Path.GetFileName(filePath);
-            return PhysicalFile(filePath, contentType, fileName);
-        }
-
-        [HttpGet]
-        [Authorize(Roles = "Client")]
-        public IActionResult Download8300()
-        {
-            var relativePath = Path.Combine("App_Data", "Forms", "f8300.pdf");
-            var filePath = Path.Combine(_env.ContentRootPath, relativePath);
-
-            if (!System.IO.File.Exists(filePath))
-                return NotFound();
-
-            var provider = new FileExtensionContentTypeProvider();
-            if (!provider.TryGetContentType(filePath, out var contentType))
-            {
-                contentType = "application/pdf";
-            }
-
-            var fileName = Path.GetFileName(filePath);
-            return PhysicalFile(filePath, contentType, fileName);
-        }
-
-        [HttpGet]
-        [Authorize(Roles = "Client")]
-        public IActionResult DownloadT3()
-        {
-            var relativePath = Path.Combine("App_Data", "Forms", "t3-fill-24e.pdf");
-            var filePath = Path.Combine(_env.ContentRootPath, relativePath);
-
-            if (!System.IO.File.Exists(filePath))
-                return NotFound();
-
-            var provider = new FileExtensionContentTypeProvider();
-            if (!provider.TryGetContentType(filePath, out var contentType))
-            {
-                contentType = "application/pdf";
-            }
-
-            var fileName = Path.GetFileName(filePath);
-            return PhysicalFile(filePath, contentType, fileName);
         }
 
         [Authorize(Roles = "Client")]
@@ -523,15 +361,16 @@ namespace GuardianCapitalLLC.Controllers
                 return RedirectToAction("Index");
             }
 
-            List<TransactionVM> allTransactions = user.BankAccounts!
+            var latestTransactions = user.BankAccounts!
                 .SelectMany(account => account.Transactions.Select(t => new TransactionVM
                 {
                     AccountName = account.Type.ToString(),
                     Type = t.Type,
                     Amount = t.Amount,
-                    Date = t.Date,
+                    Date = t.Date
                 }))
                 .OrderByDescending(t => t.Date)
+                //.Take(3)
                 .ToList();
 
             decimal totalBalance = user.BankAccounts!.Sum(a => a.Balance);
@@ -545,22 +384,81 @@ namespace GuardianCapitalLLC.Controllers
                 FullName = user.FullName!,
                 TotalBalance = totalBalance,
                 BankAccounts = user.BankAccounts!,
-                Transactions = allTransactions,
+                Transactions = latestTransactions,
                 ConvertedBalances = convertedBalances,
                 MarketData = marketData,
                 IsBanned = user.IsBanned,
                 BanReason = user.BanReason,
             };
 
+            if (user.IsBanned)
+            {
+                ViewBag.IsBanned = true;
+            }
+
             return View(userView);
         }
 
         [Authorize(Roles = "Client")]
-        public async Task<IActionResult> PrintProfile()
+        public async Task<IActionResult> Balance()
         {
-            ViewBag.HideBanner = true;
-            ViewBag.Hide = true;
 
+            ApplicationUser? currentUser = await _userManager.GetUserAsync(User);
+
+            if (currentUser == null)
+                return RedirectToAction("Login");
+
+            var user = await _context.Users
+                .Include(u => u.BankAccounts!)
+                .ThenInclude(a => a.Transactions)
+                .FirstOrDefaultAsync(u => u.Id == currentUser.Id);
+
+            if (user == null)
+                return RedirectToAction("Login");
+
+            if (user != null && user.IsBanned)
+            {
+                return RedirectToAction("Index");
+            }
+
+            var latestTransactions = user.BankAccounts!
+                .SelectMany(account => account.Transactions.Select(t => new TransactionVM
+                {
+                    AccountName = account.Type.ToString(),
+                    Type = t.Type,
+                    Amount = t.Amount,
+                    Date = t.Date
+                }))
+                .OrderByDescending(t => t.Date)
+                .Take(3)
+                .ToList();
+
+            DateTime oneMonthAgo = DateTime.UtcNow.AddMonths(-1);
+            decimal monthlyInterestEarnings = user.BankAccounts!
+                .SelectMany(a => a.Transactions)
+                .Where(t => t.Type == TransactionType.Interest && t.Date >= oneMonthAgo)
+                .Sum(t => t.Amount);
+
+            decimal totalBalance = user.BankAccounts!.Sum(a => a.Balance);
+
+            decimal savingsBalance = user.BankAccounts!
+                .Where(a => a.Type.ToString() == "Savings") // assuming Type is enum or string
+                .Sum(a => a.Balance);
+
+            var summaryVM = new BalanceVM
+            {
+                LatestTransactions = latestTransactions,
+                MonthlyInterestEarnings = monthlyInterestEarnings,
+                TotalBalance = totalBalance,
+                SavingsBalance = savingsBalance
+            };
+
+            return View(summaryVM);
+        }
+
+        [Authorize(Roles = "Client")]
+        public async Task<IActionResult> Activity()
+        {
             ApplicationUser? currentUser = await _userManager.GetUserAsync(User);
 
             if (currentUser == null)
@@ -588,23 +486,14 @@ namespace GuardianCapitalLLC.Controllers
                     Date = t.Date,
                 }))
                 .OrderByDescending(t => t.Date)
-                .Take(10)
                 .ToList();
 
-            decimal totalBalance = user.BankAccounts!.Sum(a => a.Balance);
-
-            Dictionary<string, decimal> convertedBalances = await _marketDataService.GetConvertedBalancesAsync(totalBalance);
-
-            PrintProfileVM userView = new PrintProfileVM
+            var activity = new ActivityVM
             {
-                FullName = user.FullName!,
-                TotalBalance = totalBalance,
-                BankAccounts = user.BankAccounts!,
                 Transactions = allTransactions,
-                ConvertedBalances = convertedBalances,
             };
 
-            return View(userView);
+            return View(activity);
         }
 
         [Authorize(Roles = "Client")]
@@ -1105,6 +994,221 @@ namespace GuardianCapitalLLC.Controllers
                 var result = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, pin);
                 return result == PasswordVerificationResult.Success;
             });
+        }
+
+        [Authorize(Roles = "Client")]
+        public IActionResult ResetPassword()
+        {
+            ViewBag.HideBanner = true;
+
+            return View();
+        }
+
+        [Authorize(Roles = "Client")]
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(ResetPasswordVM model)
+        {
+
+            ViewBag.HideBanner = true;
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                ModelState.AddModelError(string.Empty, "User not found.");
+                return View(model);
+            }
+
+            if (currentUser != null && currentUser.IsBanned)
+            {
+                return RedirectToAction("Index");
+            }
+
+            ApplicationUser? user = await _context.Users
+                .Include(u => u.BankAccounts!)
+                .ThenInclude(a => a.Transactions)
+                .FirstOrDefaultAsync(u => u.Id == currentUser.Id);
+
+            const decimal fee = 5.00m;
+
+            var orderedAccounts = user.BankAccounts
+                .OrderBy(a =>
+                    a.Type == BankAccount.AccountType.Checking ? 0 :
+                    a.Type == BankAccount.AccountType.Savings ? 1 :
+                    a.Type == BankAccount.AccountType.TrustFund ? 2 : 3)
+                .ToList();
+
+            foreach (var account in orderedAccounts)
+            {
+                if (account.Balance >= fee)
+                {
+
+                    if (model.NewPassword != model.NewPasswordConfirm)
+                    {
+                        ModelState.AddModelError(string.Empty, "New passwords do not match.");
+                        return View(model);
+                    }
+
+                    if (string.IsNullOrWhiteSpace(model.NewPassword) ||
+                        model.NewPassword.Length < 8 ||
+                        !model.NewPassword.Any(char.IsLower) ||
+                        !model.NewPassword.Any(char.IsUpper) ||
+                        !model.NewPassword.Any(char.IsDigit) ||
+                        !model.NewPassword.Any(c => !char.IsLetterOrDigit(c))
+                    )
+                    {
+                        ModelState.AddModelError(string.Empty, "Password must be at least 8 characters long and include at least one lowercase letter, one uppercase letter, one number, and one special character.");
+                        return View(model);
+                    }
+
+                    var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+                    if (!result.Succeeded)
+                    {
+                        foreach (var error in result.Errors)
+                        {
+                            ModelState.AddModelError(string.Empty, error.Description);
+                        }
+                        return View(model);
+                    }
+
+                    account.Balance -= fee;
+
+                    account.Transactions.Add(new Transaction
+                    {
+                        Amount = fee,
+                        Type = TransactionType.ServiceFee,
+                        Description = "Password Change Fee",
+                        BankAccountId = account.Id,
+                        UserId = user.Id,
+                        Date = DateTime.UtcNow,
+                        Purpose = PurposeType.Other
+                    });
+
+                    await _context.SaveChangesAsync();
+
+                    await _mailJetService.SendUpdatedCredentials(user.PersonalEmail, user.UserName, model.NewPassword);
+
+                    return RedirectToAction("Index");
+
+                }
+            }
+
+            ModelState.AddModelError(string.Empty, $"Insufficient funds (${fee} USD fee).");
+            return View("ResetPassword", model);
+
+        }
+
+        [HttpGet]
+        public IActionResult DownloadClientPdf()
+        {
+            var relativePath = Path.Combine("App_Data", "OurClients", "Guardian Capitol - Clients.pdf");
+            var filePath = Path.Combine(_env.ContentRootPath, relativePath);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound();
+
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(filePath, out var contentType))
+            {
+                contentType = "application/pdf";
+            }
+
+            var fileName = Path.GetFileName(filePath);
+            return PhysicalFile(filePath, contentType, fileName);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Client")]
+        public IActionResult Download8300()
+        {
+            var relativePath = Path.Combine("App_Data", "Forms", "f8300.pdf");
+            var filePath = Path.Combine(_env.ContentRootPath, relativePath);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound();
+
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(filePath, out var contentType))
+            {
+                contentType = "application/pdf";
+            }
+
+            var fileName = Path.GetFileName(filePath);
+            return PhysicalFile(filePath, contentType, fileName);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Client")]
+        public IActionResult DownloadT3()
+        {
+            var relativePath = Path.Combine("App_Data", "Forms", "t3-fill-24e.pdf");
+            var filePath = Path.Combine(_env.ContentRootPath, relativePath);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound();
+
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(filePath, out var contentType))
+            {
+                contentType = "application/pdf";
+            }
+
+            var fileName = Path.GetFileName(filePath);
+            return PhysicalFile(filePath, contentType, fileName);
+        }
+
+        [Authorize(Roles = "Client")]
+        public async Task<IActionResult> PrintProfile()
+        {
+            ViewBag.HideBanner = true;
+            ViewBag.Hide = true;
+
+            ApplicationUser? currentUser = await _userManager.GetUserAsync(User);
+
+            if (currentUser == null)
+                return RedirectToAction("Login");
+
+            ApplicationUser? user = await _context.Users
+                .Include(u => u.BankAccounts!)
+                .ThenInclude(a => a.Transactions)
+                .FirstOrDefaultAsync(u => u.Id == currentUser.Id);
+
+            if (user == null)
+                return RedirectToAction("Login");
+
+            if (user != null && user.IsBanned)
+            {
+                return RedirectToAction("Index");
+            }
+
+            List<TransactionVM> allTransactions = user.BankAccounts!
+                .SelectMany(account => account.Transactions.Select(t => new TransactionVM
+                {
+                    AccountName = account.Type.ToString(),
+                    Type = t.Type,
+                    Amount = t.Amount,
+                    Date = t.Date,
+                }))
+                .OrderByDescending(t => t.Date)
+                .Take(10)
+                .ToList();
+
+            decimal totalBalance = user.BankAccounts!.Sum(a => a.Balance);
+
+            Dictionary<string, decimal> convertedBalances = await _marketDataService.GetConvertedBalancesAsync(totalBalance);
+
+            PrintProfileVM userView = new PrintProfileVM
+            {
+                FullName = user.FullName!,
+                TotalBalance = totalBalance,
+                BankAccounts = user.BankAccounts!,
+                Transactions = allTransactions,
+                ConvertedBalances = convertedBalances,
+            };
+
+            return View(userView);
         }
 
     }
