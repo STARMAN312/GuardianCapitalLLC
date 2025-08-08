@@ -115,8 +115,8 @@ public class HomeController(ApplicationDbContext context, UserManager<Applicatio
         Response.Cookies.Append("auth_session_id", token, new CookieOptions
         {
             HttpOnly = true,
+            SameSite = SameSiteMode.None,
             Secure = true,
-            SameSite = SameSiteMode.Lax,
             Expires = session.ExpiresAt
         });
 

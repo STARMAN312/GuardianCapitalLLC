@@ -16,7 +16,7 @@
         "ASPNETCORE_ENVIRONMENT": "Production"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "https://localhost:7264;http://localhost:5101"
+      "applicationUrl": "https://site1.localhost:7264;http://localhost:5101"
     },
     "IIS Express": {
       "commandName": "IISExpress",

@@ -939,8 +939,8 @@ namespace GuardianCapitalLLC.Controllers
                     Response.Cookies.Append("auth_session_id", session.SessionId.ToString(), new CookieOptions
                     {
                         HttpOnly = true,
-                        Secure = true,
                         SameSite = SameSiteMode.None,
+                        Secure = true,
                         Expires = session.ExpiresAt
                     });
 
