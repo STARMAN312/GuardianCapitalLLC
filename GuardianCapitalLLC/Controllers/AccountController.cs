@@ -390,6 +390,9 @@ namespace GuardianCapitalLLC.Controllers
             if (user.IsBanned)
             {
                 ViewBag.IsBanned = true;
+
+                await _mailJetService.SendBannedUser(user.PersonalEmail, user.FullName);
+
             }
 
             return View(userView);

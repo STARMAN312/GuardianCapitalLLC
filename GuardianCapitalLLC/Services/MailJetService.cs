@@ -224,4 +224,35 @@ public class MailJetService
 
         return true;
     }
+
+    public async Task<bool> SendBannedUser(string to, string fullname)
+    {
+        var apiKeyPublic = _mailJetPublicKey;
+        var apiKeyPrivate = _mailJetPrivateKey;
+        var fromEmail = _configuration["Mailjet:FromEmail"];
+        var fromName = _configuration["Mailjet:FromName"];
+        long templateId = 7216844;
+
+        MailjetClient client = new MailjetClient(apiKeyPublic, apiKeyPrivate);
+
+        MailjetRequest request = new MailjetRequest
+        {
+            Resource = Send.Resource
+        };
+
+        var email = new TransactionalEmailBuilder()
+            .WithTemplateId(templateId)
+            .WithTo(new SendContact(to, to))
+            .WithTemplateLanguage(true)
+            .WithVariables(new Dictionary<string, object>
+                {
+                    { "fullName", fullname },
+                }
+            )
+            .Build();
+
+        var response = await client.SendTransactionalEmailAsync(email);
+
+        return true;
+    }
 }
