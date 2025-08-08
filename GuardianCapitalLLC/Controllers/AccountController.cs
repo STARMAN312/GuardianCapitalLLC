@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using NuGet.Common;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
@@ -939,7 +940,7 @@ namespace GuardianCapitalLLC.Controllers
                     {
                         HttpOnly = true,
                         Secure = true,
-                        SameSite = SameSiteMode.Lax,
+                        SameSite = SameSiteMode.None,
                         Expires = session.ExpiresAt
                     });
 
