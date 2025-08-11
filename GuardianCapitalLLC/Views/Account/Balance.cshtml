@@ -1,5 +1,256 @@
 ﻿@model BalanceVM
+@using System.Text.RegularExpressions
+@using System.Text.Json
+@using System.Linq
 @{
-    ViewData["Title"] = "Guardian Capital - Your Money";
-    Layout = "_ClientLayout";
+	ViewData["Title"] = "Guardian Capital - Your Money";
+	Layout = "_ClientLayout";
+
+	var labelsJson = JsonSerializer.Serialize(Model?.AccountBalances?.Select(a => a.AccountName) ?? new string[0]);
+	var dataJson = JsonSerializer.Serialize(Model?.AccountBalances?.Select(a => a.Balance) ?? new decimal[0]);
 }
+
+<nav aria-label="breadcrumb">
+	<ol class="breadcrumb breadcrumb-style mg-b-0">
+		<li class="breadcrumb-item">
+			<a>Guardian Capital</a>
+		</li>
+		<li class="breadcrumb-item active">
+			<a>Your Money</a>
+		</li>
+	</ol>
+</nav>
+
+<div class="row account-information">
+	<div class="col-xl-6 col-lg-6 col-md-12 col-xs-12">
+		<div class="card px-3 ps-4">
+			<div class="card-body">
+				<div class="d-flex flex-column">
+					<div class="d-flex flex-row justify-content-between justify-content-center">
+						<span class="tx-20 mt-3">
+							Total Balance
+						</span>
+						<div class="btn-group mb-2 mt-2">
+							<a href="" data-bs-toggle="dropdown" aria-expanded="false">
+								<i class="fe fe-more-vertical"></i>
+							</a>
+							<ul class="dropdown-menu">
+								<li><a class="dropdown-item" asp-controller="Account" asp-action="Deposit">Deposit to Account</a></li>
+								<li><a class="dropdown-item" asp-controller="Account" asp-action="TransferFundsToInternalAccount">Transfer Between My Accounts</a></li>
+								<li><a class="dropdown-item" asp-controller="Account" asp-action="TransferFundsToExternalAccount">Transfer to External Account</a></li>
+							</ul>
+						</div>
+					</div>
+					<span class="tx-30 tx-bold mt-3 market-price" data-usd="@Model.TotalBalance">
+						<span class="balance-text">
+							$@Model.TotalBalance.ToString("N2") USD
+						</span>
+					</span>
+					<div class="justify-content-between market-price d-flex flex-column flex-lg-row tx-15 mt-3" data-usd="@Model.SavingsBalance">
+						<span>
+							Generating interest:
+						</span>
+						<span class="balance-text mb-3 mb-lg-0">
+							$@Model.SavingsBalance.ToString("N2") USD
+						</span>
+					</div>
+					<span class="tx-15 market-price mb-4" data-usd="@Model.MonthlyInterestEarnings">
+						You gained
+						<span class="balance-text text-success">
+							$@Model.MonthlyInterestEarnings.ToString("N2") USD
+						</span>
+						in the last month
+					</span>
+				</div>
+				<div class="row index1">
+					@foreach (TransactionVM transaction in Model.LatestTransactions)
+					{
+						<div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
+							<a class="row p-1 bd-t">
+								<div class="col-2 d-flex align-items-center justify-content-center">
+									@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal")
+									{
+										<div class="circle-icon bg-warning text-center align-self-center overflow-hidden shadow">
+											<i class="fa fa-angle-double-up tx-15 text-white"></i>
+										</div>
+									}
+									else if (transaction.Type.ToString() == "ServiceFee")
+									{
+										<div class="circle-icon bg-info text-center align-self-center overflow-hidden shadow">
+											<i class="fa fa-cogs tx-15 text-white"></i>
+										</div>
+									}
+									else
+									{
+										<div class="circle-icon bg-success text-center align-self-center overflow-hidden shadow">
+											<i class="fa fa-angle-double-down tx-15 text-white"></i>
+										</div>
+									}
+								</div>
+								<div class="col-10">
+									<div class="pt-4 pb-3">
+										<div class="d-flex	tx-15">
+											<h6 class="mb-2">@Regex.Replace(transaction.AccountName, "(\\B[A-Z])", " $1") - @transaction.Date.ToLocalTime().ToString("MM-dd-yyyy HH:mm tt")</h6>
+											@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal" || transaction.Type.ToString() == "ServiceFee")
+											{
+												<span class="font-weight-semibold ms-auto rounded-pill lh-maincard px-2 my-auto market-price" data-usd="@transaction.Amount" data-type="debit">
+													<span class="balance-text">
+														-$@transaction.Amount.ToString("N2")
+													</span>
+												</span>
+											}
+											else
+											{
+												<span class="font-weight-semibold ms-auto rounded-pill lh-maincard px-2 my-auto market-price" data-usd="@transaction.Amount" data-type="credit">
+													<span class="balance-text">
+														+$@transaction.Amount.ToString("N2")
+													</span>
+												</span>
+											}
+										</div>
+										<div class="pb-0 mt-0">
+											<div class="d-flex">
+												<h4 class="tx-18 font-weight-semibold mb-0">@Regex.Replace(transaction.Type.ToString(), "(\\B[A-Z])", " $1")</h4>
+											</div>
+										</div>
+									</div>
+								</div>
+							</a>
+						</div>
+					}
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+		<div class="card px-3 ps-4">
+			<div class="card-body d-flex flex-column">
+				<span class="tx-20 mt-3">
+					Accounts
+				</span>
+				<div style="width: 100%; max-width: 600px; height: 400px; position: relative;" class="mt-4 mb-4">
+					<canvas id="balancesChart" style="display: block; width: 100%; height: 100%;"></canvas>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+
+		document.addEventListener('DOMContentLoaded', function () {
+		// Parse currency info globally inside this scope
+		const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
+		const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
+
+		const currencySymbols = {
+			USD: "$", CAD: "$", EUR: "€", GBP: "£",
+			JPY: "¥", MXN: "$", KWD: "د.ك"
+		};
+
+		function formatPrice(value, currency) {
+			const symbol = currencySymbols[currency] || '';
+			return symbol + value.toLocaleString(undefined, { minimumFractionDigits: 2 }) + " " + currency;
+		}
+
+		function convertPrice(priceInUsd, currency) {
+			if (!exchangeRates[currency] || !exchangeRates["USD"]) return priceInUsd;
+			return priceInUsd * exchangeRates[currency] / exchangeRates["USD"];
+		}
+
+		// Your chart data from server
+		var labels = @Html.Raw(labelsJson);
+		var data = @Html.Raw(dataJson);
+
+		if (!labels || labels.length === 0) {
+			document.getElementById('balancesChart')
+					.insertAdjacentHTML('afterend', '<p>No accounts to display.</p>');
+			return;
+		}
+
+		function pastel(i) {
+			var hue = (i * 47) % 360;
+			return 'hsl(' + hue + ' 65% 70%)';
+		}
+		var backgroundColors = labels.map(function(_, i) { return pastel(i); });
+
+		var ctx = document.getElementById('balancesChart').getContext('2d');
+
+		if (window.balancesChartInstance) {
+			window.balancesChartInstance.destroy();
+		}
+
+		window.balancesChartInstance = new Chart(ctx, {
+			type: 'pie',
+			data: {
+				labels: labels,
+				datasets: [{
+					data: data,
+					backgroundColor: backgroundColors,
+					borderColor: '#fff',
+					borderWidth: 1
+				}]
+			},
+			options: {
+				maintainAspectRatio: false,
+				responsive: true,
+				plugins: {
+					legend: {
+						position: 'bottom',
+						labels: {
+							// Show label + converted value
+							generateLabels: function(chart) {
+								return chart.data.labels.map(function(label, i) {
+									const usdValue = chart.data.datasets[0].data[i];
+									const convertedValue = convertPrice(usdValue, selectedCurrency);
+									return {
+										text: label + ': ' + formatPrice(convertedValue, selectedCurrency),
+										fillStyle: chart.data.datasets[0].backgroundColor[i],
+										strokeStyle: '#fff',
+										lineWidth: 1,
+										hidden: false,
+										index: i
+									};
+								});
+							}
+						}
+					},
+					tooltip: {
+						callbacks: {
+							label: function(context) {
+								const usdValue = context.raw;
+								const convertedValue = convertPrice(usdValue, selectedCurrency);
+								return context.label + ': ' + formatPrice(convertedValue, selectedCurrency);
+							}
+						}
+					}
+				}
+			}
+		});
+
+		// Also update all normal text prices on the page
+			document.querySelectorAll('.market-price').forEach(option => {
+		const balanceSpan = option.querySelector('.balance-text');
+		if (!balanceSpan) return;
+
+		const priceUsd = parseFloat(option.getAttribute('data-usd'));
+		if (isNaN(priceUsd)) return;
+
+		const type = option.getAttribute('data-type'); // read type attribute here
+		let sign = "";
+
+		const converted = convertPrice(priceUsd, selectedCurrency);
+		const formatted = formatPrice(converted, selectedCurrency);
+
+		if(type === "debit"){
+			sign = "-";
+		} else if(type === "credit"){
+			sign = "+";
+		}
+
+		balanceSpan.textContent = sign + formatted;
+	});
+
+	});
+
+</script>

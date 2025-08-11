@@ -141,6 +141,13 @@ namespace GuardianCapitalLLC.Models
         public decimal MonthlyInterestEarnings { get; set; }
         public decimal TotalBalance { get; set; }
         public decimal SavingsBalance { get; set; }
+        public List<AccountBalanceVM> AccountBalances { get; set; } = new();
+    }
+
+    public class AccountBalanceVM
+    {
+        public string AccountName { get; set; } = string.Empty;
+        public decimal Balance { get; set; }
     }
 
     public class ActivityVM

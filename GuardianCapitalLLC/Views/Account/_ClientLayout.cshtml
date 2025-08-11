@@ -93,22 +93,20 @@
 						</a>
 					</div>
 					<div class="main-sidemenu">
-						@* @if (User.Identity.IsAuthenticated && ViewBag.IsBanned!) *@
-						@* { *@
-						@* 	<div class="slide-left disabled" id="slide-left"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24"><path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"/></svg></div> *@
-						@* 	<ul class="side-menu"> *@
-						@* 		<li class="slide"> *@
-						@* 			<a class="side-menu__item" asp-controller="Account" asp-action="Index"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" width="24" height="24" viewBox="0 0 24 24"><i class="fa fa-home mg-r-10"></i></svg><span class="side-menu__label">Home</span></a> *@
-						@* 		</li> *@
-						@* 		<li class="slide"> *@
-						@* 			<a class="side-menu__item" asp-controller="Account" asp-action="Balance"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" width="24" height="24" viewBox="0 0 24 24"><i class="fa fa-credit-card mg-r-10"></i></svg><span class="side-menu__label">Your Money</span></a> *@
-						@* 		</li> *@
-						@* 		<li class="slide"> *@
-						@* 			<a class="side-menu__item" asp-controller="Account" asp-action="Activity"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" width="24" height="24" viewBox="0 0 24 24"><i class="fa fa-bars mg-r-10"></i></svg><span class="side-menu__label">Activity</span></a> *@
-						@* 		</li> *@
-						@* 	</ul> *@
-						@* 	<div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24"><path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z" /></svg></div> *@
-						@* } *@
+						@if (User.Identity.IsAuthenticated && !(ViewBag.IsBanned ?? false))
+						{ 
+						 	<ul class="side-menu"> 
+						 		<li class="slide"> 
+						 			<a class="side-menu__item" asp-controller="Account" asp-action="Index"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" width="24" height="24" viewBox="0 0 24 24"><i class="fa fa-home mg-r-10"></i></svg><span class="side-menu__label">Home</span></a> 
+						 		</li> 
+						 		<li class="slide"> 
+						 			<a class="side-menu__item" asp-controller="Account" asp-action="Balance"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" width="24" height="24" viewBox="0 0 24 24"><i class="fa fa-credit-card mg-r-10"></i></svg><span class="side-menu__label">Your Money</span></a> 
+						 		</li> 
+						 		<li class="slide"> 
+						 			<a class="side-menu__item" asp-controller="Account" asp-action="Activity"><svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" width="24" height="24" viewBox="0 0 24 24"><i class="fa fa-bars mg-r-10"></i></svg><span class="side-menu__label">Activity</span></a> 
+						 		</li> 
+						 	</ul> 
+						 } 
 					</div>
 				</aside>
 			</div>
@@ -140,6 +138,11 @@
 	<!-- End Page -->
 
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
 	<script>
 		document.getElementById("logout-link").addEventListener("click", function (e) {
 			e.preventDefault();

@@ -75,44 +75,46 @@
 			}
 			<div class="col-xl-12 col-lg-12 col-md-12 col-xs-12">
 				<div class="card p-2">
-					<div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-						<div class="d-flex flex-wrap justify-content-center gap-2 border p-3 br-5 align-items-center mt-2">
-							<div class="mx-2 d-inline-block">
-								<span class="tx-18 text-dark">Currency: </span>
-							</div>
-							@foreach (var rate in Model.ConvertedBalances)
-							{
-								Dictionary<string, string> currencySymbols = new Dictionary<string, string>
-								{
-									{ "USD", "$" },
-									{ "CAD", "$" },
-									{ "EUR", "€" },
-									{ "GBP", "£" },
-									{ "JPY", "¥" },
-									{ "MXN", "$" },
-									{ "KWD", "د.ك" }
-								};
-
-								// Assign class based on currency key (USD gets 'btn-info' by default)
-								string btnClass = rate.Key == "USD" ? "btn btn-info currency-btn" : "btn btn-outline-info currency-btn";
-
-								<div class="mx-2 d-inline-block mt-1">
-									<button class="@btnClass"
-									data-currency="@rate.Key"
-									data-value="@rate.Value">
-										<span class="me-1">@currencySymbols[rate.Key]</span> @rate.Key
-									</button>
-								</div>
-							}
+					<div class="d-flex flex-wrap justify-content-center align-items-center">
+						<div class="mx-2 d-inline-block">
+							<span class="tx-18 text-dark">Currency: </span>
 						</div>
+						@foreach (var rate in Model.ConvertedBalances)
+						{
+							Dictionary<string, string> currencySymbols = new Dictionary<string, string>
+						{
+						{ "USD", "$" },
+						{ "CAD", "$" },
+						{ "EUR", "€" },
+						{ "GBP", "£" },
+						{ "JPY", "¥" },
+						{ "MXN", "$" },
+						{ "KWD", "د.ك" }
+						};
+
+							// Assign class based on currency key (USD gets 'btn-info' by default)
+							string btnClass = rate.Key == "USD" ? "btn btn-info currency-btn" : "btn btn-outline-info currency-btn";
+
+							<div class="mx-2 d-inline-block mt-1">
+								<button class="@btnClass"
+								data-currency="@rate.Key"
+								data-value="@rate.Value">
+									<span class="me-1">@currencySymbols[rate.Key]</span> @rate.Key
+								</button>
+							</div>
+						}
 					</div>
+				</div>
+			</div>
+			<div class="col-xl-6 col-lg-6 col-md-12 col-xs-12">
+				<div class="card px-3 ps-4">
 					<div class="card-body p-0">
 						<div>
 							<div class="card-header pb-1">
 								<h3 class="card-title mb-2">Account Summary</h3>
 							</div>
 							<div class="browser-stats">
-								<div class="d-flex flex-column flex-lg-row align-items-lg-center item  border-bottom my-2">
+								<div class="d-flex flex-column flex-lg-row align-items-lg-center item bd-y pt-4 pb-3">
 									<div class="d-flex">
 										<div class="">
 											<span class="font-weight-semibold tx-20">Total Balance</span>
@@ -126,7 +128,7 @@
 								</div>
 								@foreach (BankAccount bankAccount in Model.BankAccounts)
 								{
-									<div class="d-flex flex-column flex-lg-row align-items-lg-center item border-bottom my-2">
+									<div class="d-flex flex-column flex-lg-row align-items-lg-center item bd-y pt-4 pb-3">
 										<div class="d-flex">
 											<div>
 												<h6>@Regex.Replace(bankAccount.Type.ToString(), "(\\B[A-Z])", " $1") Account</h6>
@@ -147,119 +149,87 @@
 								}
 							</div>
 						</div>
-						<div>
-							@if (!Model.IsBanned)
-							{
-								<a asp-controller="Account" asp-action="Deposit" class="btn btn-info btn-lg btn-block">
-									Deposit to Account
-								</a>
-								<a asp-controller="Account" asp-action="TransferFundsToInternalAccount" class="btn btn-primary btn-lg btn-block">
-									Transfer Between My Accounts
-								</a>
-								<a asp-controller="Account" asp-action="TransferFundsToExternalAccount" class="btn btn-primary btn-lg btn-block">
-									Transfer to External Account
-								</a>
-							}
-						</div>
 					</div>
 				</div>
 			</div>
-			<div class="col-xl-12 col-lg-12 col-md-12 col-xs-12 printable-profile">
-				<div class="card p-2">
-					<div class="card-header pb-1">
-						<h3 class="card-title mb-2">Transaction History</h3>
-					</div>
-					<div class="card-body p-0">
-						<div class="table-responsive export-table mt-2">
-							<table id="file-datatable" class="table table-bordered text-nowrap key-buttons border-bottom">
-								<thead>
-									<tr>
-										<th class="border-bottom-0">Date</th>
-										<th class="border-bottom-0">Account</th>
-										<th class="border-bottom-0">Transaction</th>
-										<th class="border-bottom-0">Amount</th>
-									</tr>
-								</thead>
-								<tbody>
-									@foreach (TransactionVM transaction in Model.Transactions)
-									{
-										<tr>
-											<td>@transaction.Date.ToLocalTime().ToString("MM-dd-yyyy HH:mm tt")</td>
-											<td>@Regex.Replace(transaction.AccountName, "(\\B[A-Z])", " $1")</td>
-											<td>@Regex.Replace(transaction.Type.ToString(), "(\\B[A-Z])", " $1")</td>
-											@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal" || transaction.Type.ToString() == "ServiceFee")
-											{
-												<td class="market-price" data-usd="@transaction.Amount" data-type="debit">-$@transaction.Amount.ToString("N2")</td>
-											}
-											else
-											{
-												<td class="market-price" data-usd="@transaction.Amount" data-type="credit">+$@transaction.Amount.ToString("N2")</td>
-											}
-										</tr>
-									}
-								</tbody>
-							</table>
+			<div class="col-xl-6 col-lg-6 col-md-12 col-sm-12"> 
+				<div class="card px-3 ps-4"> 
+					<div class="row index1">
+						<div class="card-header pb-1">
+							<h3 class="card-title mb-2">Recent Transactions</h3>
+						</div>
+						@foreach (TransactionVM transaction in Model.Transactions) 
+						{ 
+							<div class="col-xl-12 col-lg-12 col-md-12 col-sm-12"> 
+								<a class="row p-1 bd-y"> 
+									<div class="col-2 d-flex align-items-center justify-content-center"> 
+										@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal") 
+										{ 
+											<div class="circle-icon bg-warning text-center align-self-center overflow-hidden shadow"> 
+												<i class="fa fa-angle-double-up tx-15 text-white"></i> 
+											</div> 
+										} 
+										else if (transaction.Type.ToString() == "ServiceFee") 
+										{ 
+											<div class="circle-icon bg-info text-center align-self-center overflow-hidden shadow"> 
+												<i class="fa fa-cogs tx-15 text-white"></i> 
+											</div> 
+										} 
+										else 
+										{ 
+											<div class="circle-icon bg-success text-center align-self-center overflow-hidden shadow"> 
+												<i class="fa fa-angle-double-down tx-15 text-white"></i> 
+											</div> 
+										} 
+									</div> 
+									<div class="col-10"> 
+										<div class="pt-4 pb-3"> 
+											<div class="d-flex	tx-15"> 
+												<h6 class="mb-2">@Regex.Replace(transaction.AccountName, "(\\B[A-Z])", " $1") - @transaction.Date.ToLocalTime().ToString("MM-dd-yyyy HH:mm tt")</h6> 
+												@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal" || transaction.Type.ToString() == "ServiceFee") 
+												{ 
+													<span class="font-weight-semibold ms-auto rounded-pill lh-maincard px-2 my-auto market-price" data-usd="@transaction.Amount" data-type="debit"> 
+														-$@transaction.Amount.ToString("N2") 
+													</span> 
+												} 
+												else 
+												{ 
+													<span class="font-weight-semibold ms-auto rounded-pill lh-maincard px-2 my-auto market-price" data-usd="@transaction.Amount" data-type="credit"> 
+														+$@transaction.Amount.ToString("N2") 
+													</span> 
+												} 
+											</div> 
+											<div class="pb-0 mt-0"> 
+												<div class="d-flex"> 
+													<h4 class="tx-18 font-weight-semibold mb-0">@Regex.Replace(transaction.Type.ToString(), "(\\B[A-Z])", " $1")</h4> 
+												</div> 
+											</div> 
+										</div> 
+									</div> 
+								</a> 
+							</div> 
+						} 
+					</div> 
+				</div> 
+			</div> 
+			@if (!Model.IsBanned)
+			{
+				<div class="col-xl-12 col-lg-12 col-md-12 col-xs-12">
+					<div class="card p-2">
+						<div class="d-flex flex-wrap justify-content-center align-items-center">
+							<a asp-controller="Account" asp-action="Deposit" class="btn btn-info btn-lg btn-block">
+								Deposit to Account
+							</a>
+							<a asp-controller="Account" asp-action="TransferFundsToInternalAccount" class="btn btn-primary btn-lg btn-block">
+								Transfer Between My Accounts
+							</a>
+							<a asp-controller="Account" asp-action="TransferFundsToExternalAccount" class="btn btn-primary btn-lg btn-block">
+								Transfer to External Account
+							</a>
 						</div>
 					</div>
 				</div>
-			</div>
-			@* <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12"> *@
-			@* 	<div class="card px-3 ps-4"> *@
-			@* 		<div class="row index1"> *@
-			@* 			@foreach (TransactionVM transaction in Model.Transactions) *@
-			@* 			{ *@
-			@* 				<div class="col-xl-12 col-lg-12 col-md-12 col-sm-12"> *@
-			@* 					<a href="#" class="row p-3 bd-y"> *@
-			@* 						<div class="col-3 d-flex align-items-center justify-content-center"> *@
-			@* 							@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal") *@
-			@* 							{ *@
-			@* 								<div class="circle-icon bg-warning text-center align-self-center overflow-hidden shadow"> *@
-			@* 									<i class="fa fa-angle-double-up tx-15 text-white"></i> *@
-			@* 								</div> *@
-			@* 							} *@
-			@* 							else if (transaction.Type.ToString() == "ServiceFee") *@
-			@* 							{ *@
-			@* 								<div class="circle-icon bg-info text-center align-self-center overflow-hidden shadow"> *@
-			@* 									<i class="fa fa-cogs tx-15 text-white"></i> *@
-			@* 								</div> *@
-			@* 							} *@
-			@* 							else *@
-			@* 							{ *@
-			@* 								<div class="circle-icon bg-success text-center align-self-center overflow-hidden shadow"> *@
-			@* 									<i class="fa fa-angle-double-down tx-15 text-white"></i> *@
-			@* 								</div> *@
-			@* 							} *@
-			@* 						</div> *@
-			@* 						<div class="col-9"> *@
-			@* 							<div class="pt-4 pb-3"> *@
-			@* 								<div class="d-flex	tx-15"> *@
-			@* 									<h6 class="mb-2">@Regex.Replace(transaction.AccountName, "(\\B[A-Z])", " $1") - @transaction.Date.ToLocalTime().ToString("MM-dd-yyyy HH:mm tt")</h6> *@
-			@* 									@if (transaction.Type.ToString().Contains("Transfer") || transaction.Type.ToString() == "Withdrawal" || transaction.Type.ToString() == "ServiceFee") *@
-			@* 									{ *@
-			@* 										<span class="font-weight-semibold ms-auto rounded-pill lh-maincard px-2 my-auto market-price" data-usd="@transaction.Amount" data-type="debit"> *@
-			@* 											-$@transaction.Amount.ToString("N2") *@
-			@* 										</span> *@
-			@* 									} *@
-			@* 									else *@
-			@* 									{ *@
-			@* 										<span class="font-weight-semibold ms-auto rounded-pill lh-maincard px-2 my-auto market-price" data-usd="@transaction.Amount" data-type="credit"> *@
-			@* 											+$@transaction.Amount.ToString("N2") *@
-			@* 										</span> *@
-			@* 									} *@
-			@* 								</div> *@
-			@* 								<div class="pb-0 mt-0"> *@
-			@* 									<div class="d-flex"> *@
-			@* 										<h4 class="tx-18 font-weight-semibold mb-0">@Regex.Replace(transaction.Type.ToString(), "(\\B[A-Z])", " $1")</h4> *@
-			@* 									</div> *@
-			@* 								</div> *@
-			@* 							</div> *@
-			@* 						</div> *@
-			@* 					</a> *@
-			@* 				</div> *@
-			@* 			} *@
-			@* 		</div> *@
-			@* 	</div> *@
-			@* </div> *@
+			}
 		</div>
 	</div>
 	@if (Model.MarketData != null)
@@ -302,9 +272,9 @@
 													else
 													{
 														<img src="~/img/@(item.Symbol.ToLower().Trim().Replace(" ", "").Replace(":", "")).png"
-															 alt="@item.Symbol"
-															 class="rounded-circle mx-2 ht-30 wd-30 me-2"
-															 onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+														alt="@item.Symbol"
+														class="rounded-circle mx-2 ht-30 wd-30 me-2"
+														onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" />
 														<div class="avatar bg-info rounded-circle align-items-center justify-content-center mx-2" style="display: none;">
 															@item.Symbol?[0]
 														</div>
@@ -447,8 +417,8 @@
 		</div>
 		<script>
 			window.addEventListener("DOMContentLoaded", function () {
-				var modal = new bootstrap.Modal(document.getElementById('modaldemo4'));
-				modal.show();
+			var modal = new bootstrap.Modal(document.getElementById('modaldemo4'));
+			modal.show();
 			});
 		</script>
 	}
@@ -493,25 +463,28 @@
 		</div>
 		<script>
 			window.addEventListener("DOMContentLoaded", function () {
-				var modal = new bootstrap.Modal(document.getElementById('modaldemo4'));
-				modal.show();
+			var modal = new bootstrap.Modal(document.getElementById('modaldemo4'));
+			modal.show();
 			});
 		</script>
 	}
 </div>
-@if (!Model.IsBanned)
-{
-	<div class="d-flex flex-column flex-lg-row justify-content-between mt-4 account-information">
-		<div class="d-flex flex-column flex-lg-row">
-			<a class="btn btn-outline-primary mt-2 mt-lg-0" asp-action="PrintProfile" asp-controller="Account">Print User Profile</a>
+<div class="d-flex flex-column flex-lg-row justify-content-between mt-4 account-information">
+	<div class="d-flex flex-column flex-lg-row">
+		<a class="btn btn-outline-primary mt-2 mt-lg-0" asp-action="GenerateStatement" asp-controller="Account">Generate Statement</a>
+		@if (!Model.IsBanned)
+		{
 			<a class="btn btn-outline-primary mt-2 mt-lg-0 ms-0 ms-lg-2" asp-action="ResetPassword" asp-controller="Account">Reset Your Password</a>
-		</div>
+		}
+	</div>
+	@if (!Model.IsBanned)
+	{
 		<div class="d-flex flex-column flex-lg-row">
 			<a class="btn btn-outline-primary mt-2 mt-lg-0" asp-action="Download8300" asp-controller="Account">Download Form 8300</a>
 			<a class="btn btn-outline-primary mt-2 mt-lg-0 ms-0 ms-lg-2" asp-action="DownloadT3" asp-controller="Account">Download T3 Tax Form</a>
 		</div>
-	</div>
-}
+	}
+</div>
 
 <div class="accent-line2 mt-5"></div>
 <div class="row row-sm contact-info">

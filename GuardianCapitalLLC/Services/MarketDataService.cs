@@ -55,57 +55,23 @@ namespace GuardianCapitalLLC.Services
         {
             var categories = new Dictionary<string, List<string>>
             {
-                { 
-                    "Stocks", new List<string> 
-                    { 
-                        "AAPL", 
-                        "MSFT", 
-                        "TSLA" 
-                    } 
-                },
-                {
-                    "Cryptocurrencies", new List<string>
-                    {
-                        "BINANCE:BTCUSDT",
-                        "BINANCE:ETHUSDT",
-                        "BINANCE:SOLUSDT",
-                        "BINANCE:ADAUSDT",
-                        "BINANCE:XRPUSDT"
-                    }
-                },
-                { 
-                    "Indexes", new List<string> 
-                    { 
-                        "SPY", 
-                        "QQQ", 
-                        "DIA", 
-                        "IWM" 
-                    } 
-                },
-                { 
-                    "Commodities", new List<string> 
-                    { 
-                        "USO", 
-                        "GLD", 
-                        "WEAT" 
-                    } 
-                },
+                { "Stocks", new List<string> { "AAPL", "MSFT", "TSLA" } },
+                { "Cryptocurrencies", new List<string> { "BINANCE:BTCUSDT", "BINANCE:ETHUSDT", "BINANCE:SOLUSDT", "BINANCE:ADAUSDT", "BINANCE:XRPUSDT" } },
+                { "Indexes", new List<string> { "SPY", "QQQ", "DIA", "IWM" } },
+                { "Commodities", new List<string> { "USO", "GLD", "WEAT" } },
             };
-
 
             var httpClient = _httpClientFactory.CreateClient();
             var marketData = new Dictionary<string, List<MarketQuoteVM>>();
 
             foreach (var category in categories)
             {
-                var quotes = new List<MarketQuoteVM>();
+                // Start fetching all quotes for the category in parallel
+                var fetchTasks = category.Value.Select(symbol => FetchFinnhubQuoteAsync(httpClient, symbol)).ToList();
 
-                foreach (var symbol in category.Value)
-                {
-                    var quote = await FetchFinnhubQuoteAsync(httpClient, symbol);
-                    if (quote != null)
-                        quotes.Add(quote);
-                }
+                var quotes = (await Task.WhenAll(fetchTasks))
+                             .Where(q => q != null)
+                             .ToList()!;
 
                 marketData[category.Key] = quotes;
             }

@@ -12,7 +12,7 @@
 						<div>
 							Username: <strong id="generated-username">@TempData["Username"]</strong>
 							<br />
-							PIN: <strong id="generated-pin">@TempData["PIN"]</strong>
+							Password: <strong id="generated-pin">@TempData["PIN"]</strong>
 						</div>
 						<div class="mt-2 mb-2">
 							<span>Make sure to copy this information and give it to the client.</span>
@@ -175,7 +175,7 @@
 	function copyToClipboard() {
 		const username = document.getElementById('generated-username').innerText;
 		const pin = document.getElementById('generated-pin').innerText;
-		const text = `Username: ${username}\nPIN: ${pin}`;
+		const text = `Username: ${username}\nPassword: ${pin}`;
 
 		navigator.clipboard.writeText(text)
 			.then(() => {

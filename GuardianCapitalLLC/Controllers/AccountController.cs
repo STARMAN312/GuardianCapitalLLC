@@ -357,17 +357,18 @@ namespace GuardianCapitalLLC.Controllers
             if (user == null)
                 return RedirectToAction("Login");
 
-            var latestTransactions = user.BankAccounts!
-                .SelectMany(account => account.Transactions.Select(t => new TransactionVM
+            var latestTransactions = await _context.Transactions
+                .Where(t => t.BankAccount.UserId == currentUser.Id) // adjust property path accordingly
+                .OrderByDescending(t => t.Date)
+                .Take(3)
+                .Select(t => new TransactionVM
                 {
-                    AccountName = account.Type.ToString(),
+                    AccountName = t.BankAccount.Type.ToString(),
                     Type = t.Type,
                     Amount = t.Amount,
                     Date = t.Date
-                }))
-                .OrderByDescending(t => t.Date)
-                //.Take(3)
-                .ToList();
+                })
+                .ToListAsync();
 
             decimal totalBalance = user.BankAccounts!.Sum(a => a.Balance);
 
@@ -401,7 +402,6 @@ namespace GuardianCapitalLLC.Controllers
         [Authorize(Roles = "Client")]
         public async Task<IActionResult> Balance()
         {
-
             ApplicationUser? currentUser = await _userManager.GetUserAsync(User);
 
             if (currentUser == null)
@@ -415,10 +415,8 @@ namespace GuardianCapitalLLC.Controllers
             if (user == null)
                 return RedirectToAction("Login");
 
-            if (user != null && user.IsBanned)
-            {
+            if (user.IsBanned)
                 return RedirectToAction("Index");
-            }
 
             var latestTransactions = user.BankAccounts!
                 .SelectMany(account => account.Transactions.Select(t => new TransactionVM
@@ -441,15 +439,24 @@ namespace GuardianCapitalLLC.Controllers
             decimal totalBalance = user.BankAccounts!.Sum(a => a.Balance);
 
             decimal savingsBalance = user.BankAccounts!
-                .Where(a => a.Type.ToString() == "Savings") // assuming Type is enum or string
+                .Where(a => a.Type.ToString() == "Savings")
                 .Sum(a => a.Balance);
+
+            var accountBalances = user.BankAccounts!
+                .Select(a => new AccountBalanceVM
+                {
+                    AccountName = a.Type.ToString(),
+                    Balance = a.Balance
+                })
+                .ToList();
 
             var summaryVM = new BalanceVM
             {
                 LatestTransactions = latestTransactions,
                 MonthlyInterestEarnings = monthlyInterestEarnings,
                 TotalBalance = totalBalance,
-                SavingsBalance = savingsBalance
+                SavingsBalance = savingsBalance,
+                AccountBalances = accountBalances
             };
 
             return View(summaryVM);
@@ -1159,7 +1166,7 @@ namespace GuardianCapitalLLC.Controllers
         }
 
         [Authorize(Roles = "Client")]
-        public async Task<IActionResult> PrintProfile()
+        public async Task<IActionResult> GenerateStatement()
         {
             ViewBag.HideBanner = true;
             ViewBag.Hide = true;
@@ -1176,11 +1183,6 @@ namespace GuardianCapitalLLC.Controllers
 
             if (user == null)
                 return RedirectToAction("Login");
-
-            if (user != null && user.IsBanned)
-            {
-                return RedirectToAction("Index");
-            }
 
             List<TransactionVM> allTransactions = user.BankAccounts!
                 .SelectMany(account => account.Transactions.Select(t => new TransactionVM
