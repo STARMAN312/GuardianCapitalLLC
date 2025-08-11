@@ -1209,6 +1209,14 @@ namespace GuardianCapitalLLC.Controllers
                 ConvertedBalances = convertedBalances,
             };
 
+            if (user.IsBanned)
+            {
+                ViewBag.IsBanned = true;
+
+                await _mailJetService.SendBannedUser(user.PersonalEmail, user.FullName);
+
+            }
+
             return View(userView);
         }
 
