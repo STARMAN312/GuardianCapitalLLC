@@ -127,6 +127,55 @@
 </div>
 
 <script>
+
+		// Function to prevent spaces in input fields
+	function preventSpaces(event) {
+		// Check if the pressed key is a space (keyCode 32 or ' ')
+		if (event.keyCode === 32 || event.key === ' ') {
+			event.preventDefault(); // Prevent the space from being entered
+			return false;
+		}
+	}
+
+	// Function to remove any existing spaces from input value
+	function removeSpaces(inputElement) {
+		inputElement.value = inputElement.value.replace(/\s/g, '');
+	}
+
+	// Apply the validation to both username and password fields
+	document.addEventListener('DOMContentLoaded', function() {
+		const usernameField = document.getElementById('InputID');
+		const passwordField = document.getElementById('InputPassword');
+
+		// Prevent spaces on keydown (before character is entered)
+		usernameField.addEventListener('keydown', preventSpaces);
+		passwordField.addEventListener('keydown', preventSpaces);
+
+		// Remove spaces on input (in case spaces are pasted)
+		usernameField.addEventListener('input', function() {
+			removeSpaces(this);
+		});
+
+		passwordField.addEventListener('input', function() {
+			removeSpaces(this);
+		});
+
+		// Also prevent spaces on paste events
+		usernameField.addEventListener('paste', function(event) {
+			// Small delay to allow paste to complete, then remove spaces
+			setTimeout(() => {
+				removeSpaces(this);
+			}, 10);
+		});
+
+		passwordField.addEventListener('paste', function(event) {
+			// Small delay to allow paste to complete, then remove spaces
+			setTimeout(() => {
+				removeSpaces(this);
+			}, 10);
+		});
+	});
+
 	function setActiveTab(tab) {
 		// Remove active class from all tabs
 		document.querySelectorAll('.tab-button').forEach(button => {
