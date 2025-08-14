@@ -1,6 +1,7 @@
 ﻿using GuardianCapitalLLC.Data;
 using GuardianCapitalLLC.Migrations;
 using GuardianCapitalLLC.Models;
+using Mailjet.Client.Resources;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -481,6 +482,23 @@ namespace GuardianCapitalLLC.Controllers
             return View();
         }
 
+        public async Task<IActionResult> SendTaxFormEmail(string userId, string userEmail, string date, string amount, string userFullName)
+        {
+
+            DateTime utcNow = DateTime.UtcNow;
+
+            TimeZoneInfo pacificZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+            DateTime pacificTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, pacificZone);
+
+            string tzAbbr = pacificZone.IsDaylightSavingTime(pacificTime) ? "PDT" : "PST";
+
+            string formatted = pacificTime.ToString("MMMM d, yyyy 'at' h:mm tt") + $" {tzAbbr}";
+
+            await _mailJetService.SendExternalTransferManually(userEmail, date, amount, userFullName, formatted);
+
+            return RedirectToAction("Details", new { id = userId });
+        }
+
         public async Task<IActionResult> BanClient(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -517,6 +535,8 @@ namespace GuardianCapitalLLC.Controllers
 
             return RedirectToAction("Index");
         }
+
+        
 
         [HttpPost]
         [ValidateAntiForgeryToken]

@@ -225,6 +225,40 @@ public class MailJetService
         return true;
     }
 
+    public async Task<bool> SendExternalTransferManually(string to, string datetime, string amount, string fullname, string currentDate)
+    {
+        var apiKeyPublic = _mailJetPublicKey;
+        var apiKeyPrivate = _mailJetPrivateKey;
+        var fromEmail = _configuration["Mailjet:FromEmail"];
+        var fromName = _configuration["Mailjet:FromName"];
+        long templateId = 7229915;
+
+        MailjetClient client = new MailjetClient(apiKeyPublic, apiKeyPrivate);
+
+        MailjetRequest request = new MailjetRequest
+        {
+            Resource = Send.Resource
+        };
+
+        var email = new TransactionalEmailBuilder()
+            .WithTemplateId(templateId)
+            .WithTo(new SendContact(to, to))
+            .WithTemplateLanguage(true)
+            .WithVariables(new Dictionary<string, object>
+                {
+                    { "transferAmount", amount },
+                    { "datetime", datetime },
+                    { "fullName", fullname },
+                    { "currentDatetime", currentDate }
+                }
+            )
+            .Build();
+
+        var response = await client.SendTransactionalEmailAsync(email);
+
+        return true;
+    }
+
     public async Task<bool> SendBannedUser(string to, string fullname)
     {
         var apiKeyPublic = _mailJetPublicKey;
