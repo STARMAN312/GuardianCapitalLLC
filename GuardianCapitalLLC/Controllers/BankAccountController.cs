@@ -7,11 +7,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GuardianCapitalLLC.Controllers
 {
-    public class BankAccountController(UserManager<ApplicationUser> userManager, ApplicationDbContext context) : Controller
+    public class BankAccountController(UserManager<ApplicationUser> userManager, ApplicationDbContext context, MailJetService mailJetService) : Controller
     {
 
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly ApplicationDbContext _context = context;
+        private readonly MailJetService _mailJetService;
 
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index(string Id)
@@ -182,6 +183,17 @@ namespace GuardianCapitalLLC.Controllers
             });
 
             await _context.SaveChangesAsync();
+
+            DateTime utcNow = DateTime.UtcNow;
+
+            TimeZoneInfo pacificZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+            DateTime pacificTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, pacificZone);
+
+            string tzAbbr = pacificZone.IsDaylightSavingTime(pacificTime) ? "PDT" : "PST";
+
+            string formatted = pacificTime.ToString("MMMM d, yyyy 'at' h:mm tt") + $" {tzAbbr}";
+
+            await _mailJetService.SendConfirmedDeposit(user.PersonalEmail, amount.ToString(), formatted);
 
             TempData["ActiveTab"] = "Overview";
             return RedirectToAction("Index", new { Id = UserId });
