@@ -7,12 +7,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GuardianCapitalLLC.Controllers
 {
-    public class BankAccountController(UserManager<ApplicationUser> userManager, ApplicationDbContext context, MailJetService mailJetService) : Controller
+    public class BankAccountController : Controller
     {
 
-        private readonly UserManager<ApplicationUser> _userManager = userManager;
-        private readonly ApplicationDbContext _context = context;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ApplicationDbContext _context;
         private readonly MailJetService _mailJetService;
+
+        public BankAccountController(UserManager<ApplicationUser> userManager, ApplicationDbContext context, MailJetService mailJetService)
+        {
+            _userManager = userManager;
+            _context = context;
+            _mailJetService = mailJetService;
+        }
 
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index(string Id)
