@@ -134,4 +134,9 @@ public class HomeController(ApplicationDbContext context, UserManager<Applicatio
         return Redirect("/");
     }
 
+    public IActionResult TermsNConditions()
+    {
+        return View();
+    }
+
 }
